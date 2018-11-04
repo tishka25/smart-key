@@ -1,4 +1,4 @@
-# A Blank PhoneGap App
+# A BLE controller PhoneGap App
 
 ## Usage
 
