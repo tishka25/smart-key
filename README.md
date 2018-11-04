@@ -5,11 +5,7 @@
 
 ### PhoneGap CLI
 
-    $ phonegap create my-app --template blank
+    $ git clone "this-repo"
+    $ phonegap build <plartform>
 
-### Desktop
-
-In your browser, open the file:
-
-    /www/index.html
 
