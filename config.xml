@@ -109,7 +109,8 @@
         <variable name="BLUETOOTH_USAGE_DESCRIPTION" value=" " />
         <preference name="phonegap-version" value="cli-6.1.0" />
     </plugin>
-    <plugin name="cordova-plugin-statusbar" spec="https://github.com/apache/cordova-plugin-statusbar.git">
-    </plugin>
+    <plugin name="cordova-plugin-statusbar" spec="https://github.com/apache/cordova-plugin-statusbar.git" />
+    <plugin name="cordova-plugin-native-transitions" spec="https://github.com/leecrossley/cordova-plugin-native-transitions.git" />
+    <gap:plugin name="cordova-plugin-native-transitions" source="npm" version="0.2.3" />
     <engine name="ios" spec="4.5.5" />
 </widget>

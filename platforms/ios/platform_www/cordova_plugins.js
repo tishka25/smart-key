@@ -389,6 +389,14 @@ module.exports = [
       "navigator.notification",
       "navigator"
     ]
+  },
+  {
+    "id": "cordova-plugin-native-transitions.NativeTransitions",
+    "file": "plugins/cordova-plugin-native-transitions/www/nativetransitions.js",
+    "pluginId": "cordova-plugin-native-transitions",
+    "clobbers": [
+      "nativetransitions"
+    ]
   }
 ];
 module.exports.metadata = 
@@ -407,7 +415,8 @@ module.exports.metadata =
   "cordova-plugin-media-capture": "1.4.3",
   "cordova-plugin-network-information": "1.3.4",
   "cordova-plugin-statusbar": "2.4.3-dev",
-  "cordova-plugin-vibration": "2.1.6"
+  "cordova-plugin-vibration": "2.1.6",
+  "cordova-plugin-native-transitions": "0.2.3"
 };
 // BOTTOM OF METADATA
 });

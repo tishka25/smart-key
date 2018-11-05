@@ -119,5 +119,13 @@
     },
     "is_top_level": true,
     "variables": {}
+  },
+  "cordova-plugin-native-transitions": {
+    "source": {
+      "type": "registry",
+      "id": "https://github.com/leecrossley/cordova-plugin-native-transitions.git"
+    },
+    "is_top_level": true,
+    "variables": {}
   }
 }

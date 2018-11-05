@@ -21,7 +21,8 @@
       "cordova-plugin-globalization": {},
       "cordova-plugin-inappbrowser": {},
       "cordova-plugin-network-information": {},
-      "cordova-plugin-vibration": {}
+      "cordova-plugin-vibration": {},
+      "cordova-plugin-native-transitions": {}
     }
   },
   "dependencies": {
@@ -36,6 +37,7 @@
     "cordova-plugin-globalization": "~1.0.7",
     "cordova-plugin-inappbrowser": "~1.7.1",
     "cordova-plugin-media-capture": "~1.4.3",
+    "cordova-plugin-native-transitions": "git+https://github.com/leecrossley/cordova-plugin-native-transitions.git",
     "cordova-plugin-network-information": "~1.3.3",
     "cordova-plugin-statusbar": "git+https://github.com/apache/cordova-plugin-statusbar.git",
     "cordova-plugin-vibration": "~2.1.5"
