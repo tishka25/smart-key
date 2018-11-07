@@ -24,18 +24,20 @@
             <div id="detailPage" class="pages">
                 This is for all characteristics
                 <ul id="characteristicsList">
+                    <li id="buttonState"> <b>Manufacturer Name</b><br></li>
+                    <li id="modelName"> <b>Model Name</b><br></li>
                 </ul>
             </div>
             <div id="aboutPage" class="pages">
                 This is for information about the device 
                 <ul id="aboutPageButtons">
-                    <li id="disconnectButton">Disconnect</li>
+                    <li id="disconnectButton"><b>Disconnect</b></li>
                 </ul>
             </div>
             <footer>
-                <button id = "mainPageButton" class="tablink" onclick="app.showPage(mainPage, this)">Main</button>
-                <button id = "detailPageButton" class="tablink" onclick="app.showPage(detailPage, this)">Details</button>
-                <button id = "aboutPageButton" class="tablink" onclick="app.showPage(aboutPage, this)">About</button>
+                <button id = "mainPageButton" class="tablink" onclick="app.showPage(mainPage, 'Main')">Main</button>
+                <button id = "detailPageButton" class="tablink" onclick="app.showPage(detailPage, 'Details')">Details</button>
+                <button id = "aboutPageButton" class="tablink" onclick="app.showPage(aboutPage, 'About')">About</button>
             </footer>
         </div>
         <script type="text/javascript" src="cordova.js"></script>

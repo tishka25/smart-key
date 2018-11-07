@@ -19,16 +19,15 @@
 'use strict';
 
 
-var ButtonState = {
-    service: "160A",
-    characteristic: "2A28"
+var DeviceName = {
+    service: "180A",
+    characteristic: "2A29"
 };
 var DeviceModel = {
     service: "180A",
-    characteristic: "2A29"
+    characteristic: "2A28"
 }
 var deviceId = 0;
-var readButtonStateInterval = null;
 
 
 
@@ -40,10 +39,6 @@ var app = {
         document.addEventListener('deviceready', this.onDeviceReady, false);
         refreshButton.addEventListener('click', this.scanForDevices, false);
         disconnectButton.addEventListener('click', this.disconnect, false);
-        changeState.addEventListener('touchstart' ,this.writeState , false);
-        // buttonState.addEventListener('click' , ()=>app.readCharacteristic(ButtonState.service , ButtonState.characteristic , buttonState , "<b>Button State:</b> <br>" ), false);
-
-        changeState.addEventListener('touchend' ,this.writeState , false);
     },
     onDeviceReady: function() {
         if(!ble.isEnabled){
@@ -53,7 +48,8 @@ var app = {
     },
     scanForDevices: function() {
         app.emptyLists();
-        app.showPage(devicesPage , "Select a device");
+        pageTitle.innerHTML = "Select a device";
+        app.showPage(devicesPage , );
         // scan for all devices
         ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice , app.onError);
         // //Stop after 5 sec
@@ -76,24 +72,22 @@ var app = {
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
         var onConnect = function(data) {
-            //Inteval to read the button state
-            readButtonStateInterval = setInterval( ()=>app.readCharacteristic(ButtonState.service , ButtonState.characteristic , buttonState , "<b>Button State:</b> <br>") , 100);
-
-            app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic , modelName , "<b>Model name:</b> <br>");
-            app.showPage(mainPage , "Main");
+            // disconnectButton.dataset.deviceId = deviceId;
+            app.readCharacteristic(DeviceName.service , DeviceName.characteristic , buttonState);
+            app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic , modelName);
+            mainPageButton.click();
         };
         ble.connect(deviceId, onConnect, app.onError);
     },
     onConnect: function(event){
-        app.readCharacteristic(ButtonState.service , ButtonState.characteristic);
+        app.readCharacteristic(DeviceName.service , DeviceName.characteristic);
         app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic);
     },
     disconnect: function(event) {
         ble.disconnect(deviceId, app.scanForDevices, app.onError);
-        clearInterval(readButtonStateInterval);
         // app.scanForDevices();
     },
-    readCharacteristic: function( service  , characteristic , target , text){
+    readCharacteristic: function( service  , characteristic , item){
         var onRead = function(data){
             // var info = document.createElement('li');
             var d = new Uint8Array(data);
@@ -101,23 +95,20 @@ var app = {
             for(var i=0;i< d.length ; i++){
                 message+=String.fromCharCode(d[i]);
             }
-            target.innerHTML = text + message;
+            item.innerHTML += message;
+            // var html = '<b>' + message + '</b>';
+            // info.innerHTML += html;
+            // info.dataset.deviceId = deviceId;  // TODO
+            // characteristicsList.appendChild(info);
         };
         ble.read(deviceId ,service , characteristic , onRead , app.onError);
     },
-    writeState : function(event){
-        var succes = ()=>console.log();
-        var data = new Uint8Array(1);
-        if(event.type === 'touchstart'){
-            data[0] = 0x58;
-        }else{
-            data[0] = 0x56;
-        }
-        ble.write(deviceId , ButtonState.service , ButtonState.characteristic , data.buffer , succes , app.onError);
+    discoverServices: function(){
+        
     },
-    emptyLists : function(){
+    emptyLists:function(){
         deviceList.innerHTML = ''; // empties the list
-        buttonState.innerHTML = '<b>Button state:</b><br>';
+        buttonState.innerHTML = '<b>Manufacturer Name</b><br>';
         modelName.innerHTML = '<b>Model Name</b><br>';
     },
     showPage:function(page, title) {
@@ -127,7 +118,7 @@ var app = {
         }
         setTimeout(()=>{
         page.hidden = false;
-        pageTitle.innerHTML = title;} , 50);
+        pageTitle.innerHTML = elmnt.innerHTML;} , 50);
         nativetransitions.fade(0.2);
     },
     onError: function(reason) {

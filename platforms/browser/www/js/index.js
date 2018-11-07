@@ -19,10 +19,14 @@
 'use strict';
 
 
-var DeviceInfo = {
+var DeviceName = {
     service: "180A",
     characteristic: "2A29"
 };
+var DeviceModel = {
+    service: "180A",
+    characteristic: "2A28"
+}
 var deviceId = 0;
 
 
@@ -30,10 +34,6 @@ var deviceId = 0;
 var app = {
     initialize: function() {
         this.bindEvents();
-        // StatusBar.styleDefault();
-        // StatusBar.styleBlackOpaque();
-        // StatusBar.backgroundColorByName("black");
-        // StatusBar.overlaysWebView(true);
     },
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
@@ -44,14 +44,11 @@ var app = {
         if(!ble.isEnabled){
             navigator.notification.alert("Bluetooth isn't enabled");
         }
-        // ble.autoConnect(deviceId , app.onConnect , app.onError);
-        // setTimeout(()=> app.scanForDevices() , 5000);
-        app.scanForDevices();
+        app.scanForDevices();  
     },
     scanForDevices: function() {
         app.emptyLists();
-        pageTitle.innerHTML = "Select a device";
-        app.showPage(devicesPage , this);
+        app.showPage(devicesPage , "Select a device");
         // scan for all devices
         ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice , app.onError);
         // //Stop after 5 sec
@@ -74,40 +71,35 @@ var app = {
     connect: function(e) {
         deviceId = e.target.dataset.deviceId;
         var onConnect = function(data) {
-            disconnectButton.dataset.deviceId = deviceId;
-            app.readCharacteristic(DeviceInfo.service , DeviceInfo.characteristic);
-            mainPageButton.click();
-
+            // disconnectButton.dataset.deviceId = deviceId;
+            app.readCharacteristic(DeviceName.service , DeviceName.characteristic , buttonState);
+            app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic , modelName);
+            app.showPage(mainPage , "Main");
         };
         ble.connect(deviceId, onConnect, app.onError);
     },
     onConnect: function(event){
-        // disconnectButton.dataset.carId = carId; //TODO
-        app.readCharacteristic(DeviceInfo.service , DeviceInfo.characteristic);
-        // app.showDetailPage();
+        app.readCharacteristic(DeviceName.service , DeviceName.characteristic);
+        app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic);
     },
     disconnect: function(event) {
-        // deviceId = event.target.dataset.deviceId;
         ble.disconnect(deviceId, app.scanForDevices, app.onError);
-        // setTimeout(()=>
-        // app.showMainPage() , 50);
-        //TODO
-        // nativetransitions.fade( 0.5);
+        // app.scanForDevices();
     },
-    readCharacteristic: function( service  , characteristic){
+    readCharacteristic: function( service  , characteristic , item){
         var onRead = function(data){
-            app.emptyLists();
-            var info = document.createElement('li');
+            // var info = document.createElement('li');
             var d = new Uint8Array(data);
             var message='';
             for(var i=0;i< d.length ; i++){
                 message+=String.fromCharCode(d[i]);
             }
-            var html = '<b>' + message + '</b>';
-            info.innerHTML = html;
-            info.dataset.deviceId = deviceId;  // TODO
-            characteristicsList.appendChild(info);
-        }
+            item.innerHTML += message;
+            // var html = '<b>' + message + '</b>';
+            // info.innerHTML += html;
+            // info.dataset.deviceId = deviceId;  // TODO
+            // characteristicsList.appendChild(info);
+        };
         ble.read(deviceId ,service , characteristic , onRead , app.onError);
     },
     discoverServices: function(){
@@ -115,25 +107,17 @@ var app = {
     },
     emptyLists:function(){
         deviceList.innerHTML = ''; // empties the list
-        characteristicsList.innerHTML = '';
+        buttonState.innerHTML = '<b>Manufacturer Name</b><br>';
+        modelName.innerHTML = '<b>Model Name</b><br>';
     },
-    // showPage:function(page , elmnt){
-    //     var a = pages.find(function(element){
-    //         return element==page;
-    //     });
-    //     for(var i=0;i<pages.length;i++){
-    //         pages[i].hidden=true;
-    //     }
-    //     a.hidden = false;
-    // },
-    showPage:function(page, elmnt) {
+    showPage:function(page, title) {
         var pages = document.getElementsByClassName("pages");
         for(var i = 0;i<pages.length;i++){
             pages[i].hidden = true;
         }
         setTimeout(()=>{
         page.hidden = false;
-        pageTitle.innerHTML = elmnt.innerHTML;} , 50);
+        pageTitle.innerHTML = title;} , 50);
         nativetransitions.fade(0.2);
     },
     onError: function(reason) {
