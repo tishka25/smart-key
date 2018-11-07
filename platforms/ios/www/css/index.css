@@ -1,0 +1,99 @@
+body {
+    font-family: "Helvetica Neue";
+    font-weight: lighter;
+    color:white;
+    -webkit-text-fill-color: white;
+    /* font-size: 1.5em; */
+    background-color: black;
+    
+    -webkit-appearance: none;  
+    
+    -webkit-touch-callout: none; -webkit-user-select: none;
+}
+
+button {
+    -webkit-appearance: square-button;
+    font-size: 1.5em;
+    font-weight: lighter;
+    border-radius: 2px;
+    background-color: #555;
+}
+
+#mainPage {
+    text-align:center;
+}
+
+#aboutPage {
+    text-align:center;
+    /* font-size: 2em; */
+}
+#aboutPage li{
+    text-align: left;
+}
+#statusPage {
+    text-align: center;
+    
+}
+#devicesPage {
+    text-align: center;
+}
+
+ul {
+    list-style: none;
+    border-bottom: 1px solid #d3d3d3;    
+    text-align: left;
+}
+
+li {
+    margin-left: -40px;
+    padding: 5px;        
+    padding-top: 10px;
+    min-height: 50px;
+    border-top: 1px solid #d3d3d3;    
+    font-size: 0.9em;
+}
+
+input[type=number]{
+    width: 20%;
+    height: 20px;
+    margin: 15px;
+
+}
+/* Style the tab buttons */
+.tablink {
+    -webkit-appearance: square-button;
+
+    background-color: #555;
+    color: white;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    /* height: 20%; */
+    
+    padding: 1% 10%;
+    font-size: 1em;
+    width: 33.33%;
+}
+
+/* Change background color of buttons on hover */
+.tablink:hover {
+    background-color: #777;
+}
+footer{
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    color: white;
+    background-color:  #555;
+    text-align: center;
+}
+
+/* Set default styles for tab content */
+.tabcontent {
+    color: white;
+    display: none;
+    padding: 50px;
+    text-align: center;
+}
