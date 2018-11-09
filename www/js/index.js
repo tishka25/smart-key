@@ -20,14 +20,15 @@
 
 
 var ButtonState = {
-    service: "160A",
-    characteristic: "2A28"
+    service: "0000160a-0000-1000-8000-00805F9B34FB",
+    characteristic: "00002a28-0000-1000-8000-00805F9B34FB"
 };
 var DeviceModel = {
-    service: "180A",
-    characteristic: "2A29"
+    service: "0000180a-0000-1000-8000-00805F9B34FB",
+    characteristic:"00002a29-0000-1000-8000-00805F9B34FB"
 }
-var deviceId = 0;
+var deviceId = 'DD7449D0-6F2C-9456-4346-38F5812FA3F4';
+                
 var readButtonStateInterval = null;
 
 
@@ -41,15 +42,17 @@ var app = {
         refreshButton.addEventListener('click', this.scanForDevices, false);
         disconnectButton.addEventListener('click', this.disconnect, false);
         changeState.addEventListener('touchstart' ,this.writeState , false);
-        // buttonState.addEventListener('click' , ()=>app.readCharacteristic(ButtonState.service , ButtonState.characteristic , buttonState , "<b>Button State:</b> <br>" ), false);
-
         changeState.addEventListener('touchend' ,this.writeState , false);
     },
     onDeviceReady: function() {
-        if(!ble.isEnabled){
-            navigator.notification.alert("Bluetooth isn't enabled");
-        }
-        app.scanForDevices();  
+        ble.isEnabled(()=>console.log("Enabled") , ()=> navigator.notification.alert("Bluetooth isn't enabled")); 
+        app.scanForDevices();
+
+        // //Go to scanner if not connect after 10 sec
+        // setTimeout(function(){
+        //     // ble.disconnect();
+        //     ble.isConnected(deviceId , ()=>console.log("nice"), app.scanForDevices());
+        // } , 10000);
     },
     scanForDevices: function() {
         app.emptyLists();
@@ -60,6 +63,8 @@ var app = {
         setTimeout(ble.stopScan , 5000);
     },
     onDiscoverDevice: function(device) {
+        ble.autoConnect(deviceId , app.onConnect , app.disconnect);
+
         var listItem = document.createElement('li'),
             html = '<b>' + device.name + '</b><br/>' +
                 'RSSI: ' + device.rssi + '&nbsp;|&nbsp;' +
@@ -82,11 +87,13 @@ var app = {
             app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic , modelName , "<b>Model name:</b> <br>");
             app.showPage(mainPage , "Main");
         };
-        ble.connect(deviceId, onConnect, app.onError);
+        ble.connect(deviceId, onConnect, app.disconnect);
     },
     onConnect: function(event){
-        app.readCharacteristic(ButtonState.service , ButtonState.characteristic);
-        app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic);
+        readButtonStateInterval = setInterval( ()=>app.readCharacteristic(ButtonState.service , ButtonState.characteristic , buttonState , "<b>Button State:</b> <br>") , 100);
+
+        app.readCharacteristic(DeviceModel.service , DeviceModel.characteristic , modelName , "<b>Model name:</b> <br>");
+        app.showPage(mainPage , "Main");
     },
     disconnect: function(event) {
         ble.disconnect(deviceId, app.scanForDevices, app.onError);
