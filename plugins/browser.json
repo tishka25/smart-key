@@ -45,13 +45,16 @@
         },
         "cordova-plugin-vibration": {
             "PACKAGE_NAME": "com.phonegap.ble-controller"
+        },
+        "cordova-plugin-file": {
+            "PACKAGE_NAME": "com.phonegap.ble-controller"
+        },
+        "cordova-plugin-file-transfer": {
+            "PACKAGE_NAME": "com.phonegap.ble-controller"
         }
     },
     "dependent_plugins": {
         "cordova-plugin-compat": {
-            "PACKAGE_NAME": "com.phonegap.ble-controller"
-        },
-        "cordova-plugin-file": {
             "PACKAGE_NAME": "com.phonegap.ble-controller"
         }
     }
