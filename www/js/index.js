@@ -82,9 +82,11 @@ var app = {
     // ble.isEnabled(()=>console.log("Enabled") , ()=> navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
     // Write to a file
-    // app.createFile("TEST.txt");
-    app.writeToFile("TEST.txt" , "TEST IS HERE");
-    app.readFile("TEST.txt");
+    app.createFile("TEST.txt");
+    // app.writeToFile("TEST.txt" , "Ebi mu maikata");
+    app.readFile("TEST.txt" , function(info){
+      console.log(info);
+    });
     //
     // //Go to scanner if not connect after 10 sec
     // setTimeout(function(){
@@ -97,6 +99,10 @@ var app = {
   },
   autoConnect: function() {
     console.log("Auto connect searching");
+    app.writeToFile("TEST.txt" , "OKUREEC");
+    app.readFile("TEST.txt" , function(info){
+      console.log(info);
+    });
 
     // var onDiscover = function(device) {
     //   ble.autoConnect(deviceId, app.onConnect, app.disconnect);
@@ -245,7 +251,13 @@ var app = {
     function successCallback(fs) {
       fs.root.getFile(fileName,{ create: true, exclusive: true },function(fileEntry) {
           alert("File creation successfull!");
-        },app.onError);
+        },function(error){
+          if(error.code == FileError.PATH_EXISTS_ERR){
+            console.log(FileError.PATH_EXISTS_ERR);
+          }else if(error.code<13){
+            app.onError(error.code);
+          }
+        });
     }
   },
   writeToFile: function(fileName, information) {
@@ -257,14 +269,16 @@ var app = {
       fs.root.getFile(fileName,{ create: true },function(fileEntry) {
           fileEntry.createWriter(function(fileWriter) {
             fileWriter.onwriteend = function(e) {
-              alert("Write completed.");
+              console.log("Write completed.");
             };
 
             fileWriter.onerror = function(e) {
-              alert("Write failed: " + e.toString());
+              console.log("Write failed: " + e.toString());
             };
 
             var blob = new Blob([information], { type: "text/plain" });
+            fileWriter.truncate(information.length);
+            // fileWriter.seek(0);
             fileWriter.write(blob);
           }, app.onError);
         },
@@ -272,8 +286,9 @@ var app = {
       );
     }
   },
-  readFile: function(fileName) {
+  readFile: function(fileName , handler) {
     var type = window.PERSISTENT;
+    var information = null;
     var size = 5 * 1024 * 1024;
     window.requestFileSystem(type, size, successCallback, app.onError);
 
@@ -283,8 +298,7 @@ var app = {
             var reader = new FileReader();
 
             reader.onloadend = function(e) {
-              //    var txtArea = document.getElementById('textarea');
-              alert(this.result);
+              handler(this.result);
             };
             reader.readAsText(file);
           }, app.onError);
@@ -292,6 +306,7 @@ var app = {
         app.onError
       );
     }
+    return information;
   },
   onError: function(reason) {
     navigator.notification.alert("ERROR: " + reason); // real apps should use notification.alert
