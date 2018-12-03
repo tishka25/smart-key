@@ -48,7 +48,8 @@ var IGNITION = {
 
 //Device to autoConnect
 //TODO make this read/write from a file
-var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
+// var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
+var deviceId = null;
 //
 
 //Interval to read all states
@@ -63,7 +64,6 @@ var app = {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
     disconnectButton.addEventListener("click", this.disconnect, false);
-
 
 
     //Auto connect
@@ -81,11 +81,19 @@ var app = {
     //
   },
   onDeviceReady: function () {
-    // ble.isEnabled(()=>console.log("Enabled") , ()=> navigator.notification.alert("Bluetooth isn't enabled"));
+    StatusBar.overlaysWebView(true);
+    StatusBar.styleDefault();
+
+    ble.isEnabled(()=>console.log("Enabled") , ()=> navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
   },
   initialSetup: function () {
-
+    // app.subscribeCharacteristic(CAR_SERVICE , WINDOWS.LEFT.CHARACTERISTIC , windowLeftValue , '');
+    // app.subscribeCharacteristic(CAR_SERVICE , WINDOWS.RIGHT.CHARACTERISTIC , windowRightValue , '');
+    // app.subscribeCharacteristic(CAR_SERVICE , IGNITION.CHARACTERISTIC , ignitionValue , '');
+    app.subscribeCharacteristic(CAR_SERVICE , WINDOWS.LEFT.CHARACTERISTIC , windowLeftValue , '');
+    app.subscribeCharacteristic(CAR_SERVICE , WINDOWS.RIGHT.CHARACTERISTIC , windowRightValue , '');
+    app.subscribeCharacteristic(CAR_SERVICE , IGNITION.CHARACTERISTIC , ignitionValue , '');
   },
   autoConnect: function () {
     console.log("Auto connect searching");
@@ -104,9 +112,9 @@ var app = {
     app.emptyLists();
     app.showPage(devicesPage, "Select a device");
     // scan for all devices
-    // ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice , app.onError);
+    ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice , app.onError);
     // //Stop after 5 sec
-    // setTimeout(ble.stopScan, 5000);
+    setTimeout(ble.stopScan, 5000);
   },
   onDiscoverDevice: function (device) {
 
@@ -143,6 +151,7 @@ var app = {
     connectingDialog.hidden = false;
     console.log("\n Device ID :" + deviceId + "\n");
     var onConnect = function (data) {
+      app.initialSetup();
       app.showPage(engineControl, "Engine Control");
       connectingDialog.hidden = true;
     };
@@ -153,15 +162,18 @@ var app = {
     clearInterval(readStatesInterval);
     app.scanForDevices();
   },
+  subscribeCharacteristic: function(service , characteristic , target , text){
+    //TODO 
+    var onNotification = function(buffer){
+      var data = new Uint8Array(buffer);
+      target.innerHTML = text +  ('0x' + ((data[0])>>>0).toString(16));
+    };
+    ble.startNotification(deviceId ,service , characteristic , onNotification , app.onError);
+  },
   readCharacteristic: function (service, characteristic, target, text) {
-    var onRead = function (data) {
-      // var info = document.createElement('li');
-      var d = new Uint8Array(data);
-      var message = "";
-      for (var i = 0; i < d.length; i++) {
-        message += String.fromCharCode(d[i]);
-      }
-      target.innerHTML = text + message;
+    var onRead = function(buffer){
+      var data = new Uint8Array(buffer);
+      target.innerHTML = text + (((data[0])>>>0).toString(16));
     };
     ble.read(deviceId, service, characteristic, onRead, app.onError);
   },
@@ -193,16 +205,21 @@ var app = {
         data[0] = IGNITION.ON;
       }
     } else if (event.type == "touchend") {
-      if (event.target.id == "engineStartButton")
+      if (event.target.id == "engineStartButton"){
         event.target.style = "border-radius: 100%;background-color:none";
-
-      data[0] = WINDOWS.DEFAULT;
-      console.log(deviceId, CAR_SERVICE, event.target.id, data);
-
+        characteristic = IGNITION.CHARACTERISTIC;
+        data[0] = IGNITION.OFF;
+      }else if(event.target.id == "windowLeftDown" || event.target.id == "windowLeftUp"){
+        characteristic = WINDOWS.LEFT.CHARACTERISTIC;
+        data[0] = WINDOWS.DEFAULT;
+      }else if(event.target.id == "windowRightDown" || event.target.id == "windowRightUp"){
+        characteristic = WINDOWS.RIGHT.CHARACTERISTIC;
+        data[0] = WINDOWS.DEFAULT;
+      }
+        
     }
-    //TODO ALERT
-    // ble.write(deviceId, CAR_SERVICE , characteristic , data.buffer , succes , app.onError);
-
+    console.log("\n" + characteristic + "\n");
+    ble.write(deviceId, CAR_SERVICE , characteristic , data.buffer , succes , app.onError);
   },
   emptyLists: function () {
     deviceList.innerHTML = ""; // empties the list

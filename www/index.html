@@ -23,6 +23,9 @@
     <div class="app">
         <!-- <p  style="text-align:center; ">Smart Key</p> -->
         <div class="toolbar">
+            <div class="toolbar__left" id="backButton">
+                <span class="toolbar-button" data-page="">Back</span>
+            </div>
             <div class="toolbar__center" id="pageTitle">Navigation Bar</div>
         </div>
         <div id="devicesPage" class="pages">
@@ -68,7 +71,7 @@
         <div id="windowControl" class="pages">
             <div style="float:left; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <p> Left</p>
-                <div style="margin-bottom:10px">
+                <div>
                     <i class="fas fa-angle-double-up" style="font-size:70px" id="windowLeftUp"></i>
                 </div>
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
@@ -77,7 +80,7 @@
             </div>
             <div style="float:right; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <p> Right</p>
-                <div style="margin-bottom:10px">
+                <div >
                     <i class="fas fa-angle-double-up" style="font-size:70px" id="windowRightUp"></i>
                 </div>
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
@@ -98,11 +101,57 @@
                     </div>
                 </li>
 
+                <li class="list-item list-item--tappable" id="debugPageButton" hidden="true" onclick="app.showPage(debugPage , 'Debug Page')">
+                    <div class="list-item__center">Debug Page</div>
+                </li>
+
                 <li class="list-item list-item--tappable" id="disconnectButton">
-                        <div class="list-item__center">Disconnect</div>
-                    </li>
+                    <div class="list-item__center">Disconnect</div>
+                </li>
             </ul>
         </div>
+
+
+
+
+        <div class="pages" id="debugPage">
+            <ul class="list">
+                <li class="list-item">
+                    <div class="list-item__center">
+                        <div class="list-item__title">
+                            Window Left:
+                        </div>
+                        <div class="list-item__subtitle" id="windowLeftValue">
+
+                        </div>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="list-item__center">
+                        <div class="list-item__title">
+                            Window Right:
+                        </div>
+                        <div class="list-item__subtitle" id="windowRightValue">
+
+                        </div>
+                    </div>
+                </li>
+                <li class="list-item">
+                    <div class="list-item__center">
+                        <div class="list-item__title">
+                            Ignition:
+                        </div>
+                        <div class="list-item__subtitle" id="ignitionValue">
+
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+
+
+
         <div class="tabbar">
             <label class="tabbar__item">
                 <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage(engineControl, 'Engine Control')">

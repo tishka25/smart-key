@@ -109,6 +109,7 @@
         <preference name="phonegap-version" value="cli-6.1.0" />
     </plugin>
     <plugin name="cordova-plugin-statusbar" spec="https://github.com/apache/cordova-plugin-statusbar.git" />
+    <preference name="StatusBarOverlaysWebView" value="true" />
     <plugin name="cordova-plugin-native-transitions" spec="https://github.com/leecrossley/cordova-plugin-native-transitions.git" />
     <gap:plugin name="cordova-plugin-native-transitions" source="npm" version="0.2.3" />
     <plugin name="cordova-plugin-file" spec="~4.3.3" />
