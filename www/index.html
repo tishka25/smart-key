@@ -1,58 +1,138 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <!-- <title>BLE Controller</title> -->
-    </head>
-    <body>
-        <div class="app">
-            <p id="pageTitle" style="text-align:center; ">Smart Key</p>
-            <div id="devicesPage" class="pages">
-                <div>
-                    Auto connect 
-                    <!-- Rounded switch -->
-                    <label class="switch">
-                        <input type="checkbox" id="autoConnectButton">
-                        <span class="slider round"></span>
-                    </label>                 
+<head>
+    <meta charset="utf-8" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/onsenui.min.css" />
+    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/old-onsen-css-components.min.css" />
+    <link rel="stylesheet" type="text/css" href="css/index.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/js/onsenui.min.js"></script>
+    <script>
+        document.addEventListener("contextmenu", function (e) {
+        e.preventDefault();
+        }, false);
+    </script>
+    <!-- <title>BLE Controller</title> -->
+</head>
+
+<body style="font-family: 'Helvetica Neue'">
+    <div class="app">
+        <!-- <p  style="text-align:center; ">Smart Key</p> -->
+        <div class="toolbar">
+            <div class="toolbar__center" id="pageTitle">Navigation Bar</div>
+        </div>
+        <div id="devicesPage" class="pages">
+            <div style="text-align:center">
+                <!-- Rounded switch -->
+                <p>
+                    <nobr>Auto Connect</nobr>
+                </p>
+                <label class="switch">
+                    <input type="checkbox" class="switch__input" id="autoConnectButton">
+                    <div class="switch__toggle">
+                        <div class="switch__handle"></div>
+                    </div>
+                </label>
+            </div>
+            <div style="text-align: center ; margin-top: 1%">
+                <button class="button button--outline" id="refreshButton">Refresh</button>
+            </div>
+            <div id="connectingDialog" hidden="true">
+                <div class="dialog-mask"></div>
+                <div class="dialog">
+                    <div class="dialog-container" style="text-align:center">
+                        <svg class="progress-circular progress-circular--indeterminate" id="loadIcon" style="padding:25%">
+                            <circle class="progress-circular__background" />
+                            <circle class="progress-circular__primary progress-circular--indeterminate__primary" />
+                            <circle class="progress-circular__secondary progress-circular--indeterminate__secondary" />
+                        </svg>
+                        <p style="text-align:center;margin-top:40px;opacity:0.4;">Connecting...</p>
+                    </div>
                 </div>
-                <button id="refreshButton">Refresh</button>
-                <ul id="deviceList">
-                </ul>
             </div>
+            <ul class="list" id="deviceList">
 
-            <div id="mainPage" class="pages">
-                This is for the main page
-            </div>
+            </ul>
+        </div>
 
-            <div id="detailPage" class="pages">
-                This is for all characteristics
-                <ul id="characteristicsList">
-                    <li id="buttonState"> <b>Button state:</b><br></li>
-                    <li id="modelName"> <b>Model Name</b><br></li>
-                    <li id="changeState"> <b>Change State</b></li>
-                </ul>
+        <div id="engineControl" class="pages">
+            <div style="text-align:center ; padding-top: 50% ;" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                <img src="./res/assets/engine_start.png" id="engineStartButton">
             </div>
-            <div id="aboutPage" class="pages">
-                This is for information about the device 
-                <ul id="aboutPageButtons">
-                    <li id="disconnectButton"><b>Disconnect</b></li>
-                </ul>
+        </div>
+
+        <div id="windowControl" class="pages">
+            <div style="float:left; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                <p> Left</p>
+                <div style="margin-bottom:10px">
+                    <i class="fas fa-angle-double-up" style="font-size:70px" id="windowLeftUp"></i>
+                </div>
+                <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                    <i class="fas fa-angle-double-down" style="font-size:70px" id="windowLeftDown"></i>
+                </div>
             </div>
-            <footer>
-                <button id = "mainPageButton" class="tablink" onclick="app.showPage(mainPage, 'Main')">Main</button>
-                <button id = "detailPageButton" class="tablink" onclick="app.showPage(detailPage, 'Details')">Details</button>
-                <button id = "aboutPageButton" class="tablink" onclick="app.showPage(aboutPage, 'About')">About</button>
-            </footer>
+            <div style="float:right; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                <p> Right</p>
+                <div style="margin-bottom:10px">
+                    <i class="fas fa-angle-double-up" style="font-size:70px" id="windowRightUp"></i>
+                </div>
+                <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                    <i class="fas fa-angle-double-down" style="font-size:70px" id="windowRightDown"></i>
+                </div>
+            </div>
+        </div>
+        <div id="aboutPage" class="pages" style="margin-top:10%">
+            <ul class="list">
+                <li class="list-item">
+                    <div class="list-item__center">
+                        <div class="list-item__title">
+                            Model Name:
+                        </div>
+                        <div class="list-item__subtitle">
+                            Name
+                        </div>
+                    </div>
+                </li>
+
+                <li class="list-item list-item--tappable" id="disconnectButton">
+                        <div class="list-item__center">Disconnect</div>
+                    </li>
+            </ul>
+        </div>
+        <div class="tabbar">
+            <label class="tabbar__item">
+                <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage(engineControl, 'Engine Control')">
+                <button class="tabbar__button">
+                    <i class="tabbar__icon fas fa-car"></i>
+                    <div class="tabbar__label">Engine</div>
+                </button>
+            </label>
+
+            <label class="tabbar__item">
+                <input type="radio" name="tabbar-c" id="windowControllButton" onclick="app.showPage(windowControl, 'Window Control')">
+                <button class="tabbar__button" style="text-align:center">
+                    <i class="tabbar__icon fas fa-arrows-alt-v"></i>
+                    <div class="tabbar__label">Windows</div>
+                </button>
+            </label>
+
+            <label class="tabbar__item">
+                <input type="radio" name="tabbar-c" id="aboutPageButton" onclick="app.showPage(aboutPage, 'About')">
+                <button class="tabbar__button">
+                    <i class="tabbar__icon fas fa-info"></i>
+                    <div class="tabbar__label">About</div>
+                </button>
+            </label>
         </div>
         <script type="text/javascript" src="cordova.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
         <script type="text/javascript">
             app.initialize();
         </script>
-    </body>
+</body>
+
 </html>

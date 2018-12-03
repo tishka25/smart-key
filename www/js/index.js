@@ -1,16 +1,4 @@
-// (c) 2014 Don Coleman
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//     http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+// (c) 2018 Teodor Stanishev
 
 /* global mainPage, deviceList, refreshButton */
 /* global detailPage, DeviceInfoState, DeviceInfoStateButton, disconnectButton */
@@ -37,14 +25,27 @@
 */
 
 //SERVICES AND CHARACTERISTIC
+var CAR_SERVICE = "ca227c6b-d187-4aaf-b330-37144d84b02c";
 var WINDOWS = {
-  service: "0000160a-0000-1000-8000-00805F9B34FB",
-  characteristic: "00002a28-0000-1000-8000-00805F9B34FB"
+  DEFAULT: 0x50,
+  LEFT: {
+    CHARACTERISTIC: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
+    UP: 0x51,
+    DOWN: 0x52
+  },
+  RIGHT: {
+    CHARACTERISTIC: "96cc6576-b9b0-443b-b8e6-546bbd20d374",
+    UP: 0x54,
+    DOWN: 0x55
+  }
 };
-var DeviceModel = {
-  service: "0000180a-0000-1000-8000-00805F9B34FB",
-  characteristic: "00002a29-0000-1000-8000-00805F9B34FB"
+var IGNITION = {
+  CHARACTERISTIC: "e8d26993-a6b5-4402-bcff-0e44be7081cb",
+  OFF: 0x61,
+  ON: 0x60,
+  START: 0x62
 };
+
 //Device to autoConnect
 //TODO make this read/write from a file
 var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
@@ -55,19 +56,20 @@ var readStatesInterval = null;
 //
 
 var app = {
-  initialize: function() {
+  initialize: function () {
     this.bindEvents();
   },
-  bindEvents: function() {
+  bindEvents: function () {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
     disconnectButton.addEventListener("click", this.disconnect, false);
-    changeState.addEventListener("touchstart", this.writeState, false);
-    changeState.addEventListener("touchend", this.writeState, false);
+
+
+
     //Auto connect
     autoConnectButton.addEventListener(
       "change",
-      function(data) {
+      function (data) {
         if (autoConnectButton.checked) {
           app.autoConnect();
         } else {
@@ -78,128 +80,81 @@ var app = {
     );
     //
   },
-  onDeviceReady: function() {
+  onDeviceReady: function () {
     // ble.isEnabled(()=>console.log("Enabled") , ()=> navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
-    // Write to a file
-    app.createFile("TEST.txt");
-    // app.writeToFile("TEST.txt" , "Ebi mu maikata");
-    app.readFile("TEST.txt" , function(info){
-      console.log(info);
-    });
-    //
-    // //Go to scanner if not connect after 10 sec
-    // setTimeout(function(){
-    //     // ble.disconnect();
-    //     ble.isConnected(deviceId , ()=>console.log("nice"), app.scanForDevices());
-    // } , 10000);
   },
-  initialSetup : function(){
+  initialSetup: function () {
 
   },
-  autoConnect: function() {
+  autoConnect: function () {
     console.log("Auto connect searching");
-    app.writeToFile("TEST.txt" , "OKUREEC");
-    app.readFile("TEST.txt" , function(info){
-      console.log(info);
-    });
+    var onDiscover = function (device) {
+      ble.autoConnect(deviceId, app.connect, app.disconnect);
+    };
+    var onTimeout = function () {
+      //TODO
+      autoConnectButton.change();
+    };
 
-    // var onDiscover = function(device) {
-    //   ble.autoConnect(deviceId, app.onConnect, app.disconnect);
-    // };
-    // var onTimeout = function() {
-    //   //TODO
-    //   autoConnectButton.change();
-    // };
-
-    // ble.startScan([], onDiscover, app.onError);
-    // setTimeout(() => ble.disconnect(deviceId, onTimeout, app.onError), 5000);
+    ble.startScan([], onDiscover, app.onError);
+    setTimeout(() => ble.disconnect(deviceId, onTimeout, app.onError), 5000);
   },
-  scanForDevices: function() {
+  scanForDevices: function () {
     app.emptyLists();
     app.showPage(devicesPage, "Select a device");
     // scan for all devices
     // ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice , app.onError);
     // //Stop after 5 sec
-    setTimeout(ble.stopScan, 5000);
+    // setTimeout(ble.stopScan, 5000);
   },
-  onDiscoverDevice: function(device) {
-    // ble.autoConnect(deviceId , app.onConnect , app.disconnect);
+  onDiscoverDevice: function (device) {
 
-    var listItem = document.createElement("li"),
-      html =
-        "<b>" +
-        device.name +
-        "</b><br/>" +
-        "RSSI: " +
-        device.rssi +
-        "&nbsp;|&nbsp;" +
-        device.id;
+    var listItem = document.createElement("li");
+    listItem.className = "list-item list-item--tappable";
+    var outerDiv = document.createElement("div");
+    outerDiv.className = "list-item__center";
+    var title = document.createElement("div");
+    title.className = "list-item__title";
+    title.innerHTML = device.name;
+    var subTitle = document.createElement("div");
+    subTitle.className = "list-item__subtitle";
+    subTitle.innerHTML = device.rssi;
 
-    listItem.dataset.deviceId = device.id; // TODO
-    listItem.innerHTML = html;
+    title.appendChild(subTitle);
+    outerDiv.appendChild(title);
+    listItem.appendChild(outerDiv);
+
+    // listItem.innerHTML = html;
+    // listItem.dataset.deviceId = device.id; // TODO
+    console.log("\n Device ID Before Click:" + listItem.id + "\n");
+
+    listItem.addEventListener("click", function () {
+      deviceId = device.id;
+      app.connect();
+    }, false);
     deviceList.appendChild(listItem);
-    for (var i = 0; i < deviceList.children.length; i++) {
-      var _device = deviceList.children[i];
-      _device.addEventListener("click", app.connect, false);
-    }
+    // for (var i = 0; i < deviceList.children.length; i++) {
+    //   var _device = deviceList.children[i];
+    //   _device.addEventListener("click", app.connect, false);
+    // }
   },
-  connect: function(e) {
-    deviceId = e.target.dataset.deviceId;
-    var onConnect = function(data) {
-      //Inteval to read the button state
-      readStatesInterval = setInterval(
-        () =>
-          app.readCharacteristic(
-            WINDOWS.service,
-            WINDOWS.characteristic,
-            WINDOWS,
-            "<b>Button State:</b> <br>"
-          ),
-        100
-      );
-
-      app.readCharacteristic(
-        DeviceModel.service,
-        DeviceModel.characteristic,
-        modelName,
-        "<b>Model name:</b> <br>"
-      );
-      app.showPage(mainPage, "Main");
+  connect: function (e) {
+    connectingDialog.hidden = false;
+    console.log("\n Device ID :" + deviceId + "\n");
+    var onConnect = function (data) {
+      app.showPage(engineControl, "Engine Control");
+      connectingDialog.hidden = true;
     };
-    ble.connect(
-      deviceId,
-      onConnect,
-      app.disconnect
-    );
+    ble.connect(deviceId, onConnect, app.disconnect);
   },
-  onConnect: function(event) {
-    readStatesInterval = setInterval(
-      () =>
-        app.readCharacteristic(
-          WINDOWS.service,
-          WINDOWS.characteristic,
-          WINDOWS,
-          "<b>Button State:</b> <br>"
-        ),
-      100
-    );
-
-    app.readCharacteristic(
-      DeviceModel.service,
-      DeviceModel.characteristic,
-      modelName,
-      "<b>Model name:</b> <br>"
-    );
-    app.showPage(mainPage, "Main");
-  },
-  disconnect: function(event) {
+  disconnect: function (event) {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
     clearInterval(readStatesInterval);
-    // app.scanForDevices();
+    app.scanForDevices();
   },
-  readCharacteristic: function(service, characteristic, target, text) {
-    var onRead = function(data) {
+  readCharacteristic: function (service, characteristic, target, text) {
+    var onRead = function (data) {
       // var info = document.createElement('li');
       var d = new Uint8Array(data);
       var message = "";
@@ -210,29 +165,49 @@ var app = {
     };
     ble.read(deviceId, service, characteristic, onRead, app.onError);
   },
-  writeState: function(event) {
-    var succes = () => console.log();
+  writeState: function (event) {
+    var succes = () => console.log("\nWriten succesfully!!!\n");
+    var characteristic = null;
+
     var data = new Uint8Array(1);
     if (event.type === "touchstart") {
-      data[0] = 0x58;
-    } else {
-      data[0] = 0x56;
+      if (event.target.id == "windowLeftUp") {
+        characteristic = WINDOWS.LEFT.CHARACTERISTIC;
+        data[0] = WINDOWS.LEFT.UP;
+      }
+      if (event.target.id == "windowLeftDown") {
+        characteristic = WINDOWS.LEFT.CHARACTERISTIC;
+        data[0] = WINDOWS.LEFT.DOWN;
+      }
+      if (event.target.id == "windowRightUp") {
+        characteristic = WINDOWS.RIGHT.CHARACTERISTIC;
+        data[0] = WINDOWS.RIGHT.UP;
+      }
+      if (event.target.id == "windowRightDown") {
+        characteristic = WINDOWS.RIGHT.CHARACTERISTIC;
+        data[0] = WINDOWS.RIGHT.DOWN;
+      }
+      if (event.target.id == "engineStartButton") {
+        event.target.style = "border-radius: 100%;background-color:red;";
+        characteristic = IGNITION.CHARACTERISTIC;
+        data[0] = IGNITION.ON;
+      }
+    } else if (event.type == "touchend") {
+      if (event.target.id == "engineStartButton")
+        event.target.style = "border-radius: 100%;background-color:none";
+
+      data[0] = WINDOWS.DEFAULT;
+      console.log(deviceId, CAR_SERVICE, event.target.id, data);
+
     }
-    ble.write(
-      deviceId,
-      WINDOWS.service,
-      WINDOWS.characteristic,
-      data.buffer,
-      succes,
-      app.onError
-    );
+    //TODO ALERT
+    // ble.write(deviceId, CAR_SERVICE , characteristic , data.buffer , succes , app.onError);
+
   },
-  emptyLists: function() {
+  emptyLists: function () {
     deviceList.innerHTML = ""; // empties the list
-    buttonState.innerHTML = "<b>Button state:</b><br>";
-    modelName.innerHTML = "<b>Model Name</b><br>";
   },
-  showPage: function(page, title) {
+  showPage: function (page, title) {
     var pages = document.getElementsByClassName("pages");
     for (var i = 0; i < pages.length; i++) {
       pages[i].hidden = true;
@@ -243,40 +218,47 @@ var app = {
     }, 50);
     nativetransitions.fade(0.2);
   },
-  createFile: function(fileName = "file.txt") {
+  createFile: function (fileName = "file.txt") {
     var type = window.PERSISTENT;
     var size = 5 * 1024 * 1024;
     window.requestFileSystem(type, size, successCallback, app.onError);
 
     function successCallback(fs) {
-      fs.root.getFile(fileName,{ create: true, exclusive: true },function(fileEntry) {
-          alert("File creation successfull!");
-        },function(error){
-          if(error.code == FileError.PATH_EXISTS_ERR){
-            console.log(FileError.PATH_EXISTS_ERR);
-          }else if(error.code<13){
-            app.onError(error.code);
-          }
-        });
+      fs.root.getFile(fileName, {
+        create: true,
+        exclusive: true
+      }, function (fileEntry) {
+        alert("File creation successfull!");
+      }, function (error) {
+        if (error.code == FileError.PATH_EXISTS_ERR) {
+          console.log(FileError.PATH_EXISTS_ERR);
+        } else if (error.code < 13) {
+          app.onError(error.code);
+        }
+      });
     }
   },
-  writeToFile: function(fileName, information) {
+  writeToFile: function (fileName, information) {
     var type = window.PERSISTENT;
     var size = 5 * 1024 * 1024;
     window.requestFileSystem(type, size, successCallback, app.onError);
 
     function successCallback(fs) {
-      fs.root.getFile(fileName,{ create: true },function(fileEntry) {
-          fileEntry.createWriter(function(fileWriter) {
-            fileWriter.onwriteend = function(e) {
+      fs.root.getFile(fileName, {
+          create: true
+        }, function (fileEntry) {
+          fileEntry.createWriter(function (fileWriter) {
+            fileWriter.onwriteend = function (e) {
               console.log("Write completed.");
             };
 
-            fileWriter.onerror = function(e) {
+            fileWriter.onerror = function (e) {
               console.log("Write failed: " + e.toString());
             };
 
-            var blob = new Blob([information], { type: "text/plain" });
+            var blob = new Blob([information], {
+              type: "text/plain"
+            });
             fileWriter.truncate(information.length);
             // fileWriter.seek(0);
             fileWriter.write(blob);
@@ -286,18 +268,18 @@ var app = {
       );
     }
   },
-  readFile: function(fileName , handler) {
+  readFile: function (fileName, handler) {
     var type = window.PERSISTENT;
     var information = null;
     var size = 5 * 1024 * 1024;
     window.requestFileSystem(type, size, successCallback, app.onError);
 
     function successCallback(fs) {
-      fs.root.getFile(fileName,{},function(fileEntry) {
-          fileEntry.file(function(file) {
+      fs.root.getFile(fileName, {}, function (fileEntry) {
+          fileEntry.file(function (file) {
             var reader = new FileReader();
 
-            reader.onloadend = function(e) {
+            reader.onloadend = function (e) {
               handler(this.result);
             };
             reader.readAsText(file);
@@ -308,7 +290,7 @@ var app = {
     }
     return information;
   },
-  onError: function(reason) {
+  onError: function (reason) {
     navigator.notification.alert("ERROR: " + reason); // real apps should use notification.alert
     console.log(reason);
   }
