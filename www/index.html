@@ -44,6 +44,8 @@
             <div style="text-align: center ; margin-top: 1%">
                 <button class="button button--outline" id="refreshButton">Refresh</button>
             </div>
+
+            <!-- Connecting dialog -->
             <div id="connectingDialog" hidden="true">
                 <div class="dialog-mask"></div>
                 <div class="dialog">
@@ -57,6 +59,7 @@
                     </div>
                 </div>
             </div>
+            <!-- // -->
             <ul class="list" id="deviceList">
 
             </ul>
@@ -80,7 +83,7 @@
             </div>
             <div style="float:right; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <p> Right</p>
-                <div >
+                <div>
                     <i class="fas fa-angle-double-up" style="font-size:70px" id="windowRightUp"></i>
                 </div>
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
@@ -152,7 +155,7 @@
 
 
 
-        <div class="tabbar">
+        <div class="tabbar" style="position:fixed">
             <label class="tabbar__item">
                 <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage(engineControl, 'Engine Control')">
                 <button class="tabbar__button">

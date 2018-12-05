@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin xmlns="http://apache.org/cordova/ns/plugins/1.0"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        id="cordova-plugin-password-dialog"
+        version="1.2.0">
+
+    <name>Cordova Password Dialog Plugin</name>
+
+    <description>
+        Cordova plugin for showing password prompt dialogs.
+    </description>
+
+    <license>MIT</license>
+
+    <!-- JavaScript Interface -->
+    <js-module src="www/password-dialog-plugin.js" name="PasswordDialogPlugin">
+        <clobbers target="PasswordDialogPlugin" />
+    </js-module>
+
+    <!-- Android Configuration -->
+    <platform name="android">
+
+        <config-file target="res/xml/config.xml" parent="/*">
+            <feature name="PasswordDialogPlugin">
+                <param name="android-package" value="net.justin_credible.cordova.PasswordDialogPlugin" />
+            </feature>
+        </config-file>
+
+        <source-file src="src/android/enter_password_dialog.xml" target-dir="res/layout"/>
+        <source-file src="src/android/credentials_dialog.xml" target-dir="res/layout"/>
+        <source-file src="src/android/confirm_password_dialog.xml" target-dir="res/layout"/>
+        <source-file src="src/android/change_password_dialog.xml" target-dir="res/layout"/>
+        <source-file src="src/android/PasswordDialogPlugin.java" target-dir="src/net/justin_credible/cordova" />
+        <source-file src="src/android/FakeR.java" target-dir="src/net/justin_credible/cordova"/>
+
+    </platform>
+
+    <!-- iOS Configuration -->
+    <platform name="ios">
+
+        <config-file target="config.xml" parent="/*">
+            <feature name="PasswordDialogPlugin">
+                <param name="ios-package" value="PasswordDialogPlugin" />
+            </feature>
+        </config-file>
+
+        <header-file src="src/ios/PasswordDialogPlugin.h" />
+        <source-file src="src/ios/PasswordDialogPlugin.m" />
+
+    </platform>
+
+</plugin>

@@ -1,0 +1,85 @@
+{
+  "_args": [
+    [
+      "cordova-plugin-password-dialog",
+      "/Users/teodorstanishev/Documents/AppDevelopment/smart-key"
+    ]
+  ],
+  "_from": "cordova-plugin-password-dialog@latest",
+  "_id": "cordova-plugin-password-dialog@1.2.0",
+  "_inCache": true,
+  "_installable": true,
+  "_location": "/cordova-plugin-password-dialog",
+  "_nodeVersion": "4.2.2",
+  "_npmOperationalInternal": {
+    "host": "s3://npm-registry-packages",
+    "tmp": "tmp/cordova-plugin-password-dialog-1.2.0.tgz_1508801282804_0.33450178406201303"
+  },
+  "_npmUser": {
+    "email": "justin.unterreiner@gmail.com",
+    "name": "justin-credible"
+  },
+  "_npmVersion": "2.14.7",
+  "_phantomChildren": {},
+  "_requested": {
+    "name": "cordova-plugin-password-dialog",
+    "raw": "cordova-plugin-password-dialog",
+    "rawSpec": "",
+    "scope": null,
+    "spec": "latest",
+    "type": "tag"
+  },
+  "_requiredBy": [
+    "#USER"
+  ],
+  "_resolved": "https://registry.npmjs.org/cordova-plugin-password-dialog/-/cordova-plugin-password-dialog-1.2.0.tgz",
+  "_shasum": "21a1636c364a9753a0aaf979da4a095d87f1515f",
+  "_shrinkwrap": null,
+  "_spec": "cordova-plugin-password-dialog",
+  "_where": "/Users/teodorstanishev/Documents/AppDevelopment/smart-key",
+  "bugs": {
+    "url": "https://github.com/justin-credible/cordova-plugin-password-dialog/issues"
+  },
+  "cordova": {
+    "id": "cordova-plugin-password-dialog",
+    "platforms": [
+      "android",
+      "ios"
+    ]
+  },
+  "dependencies": {},
+  "description": "Cordova plugin for showing password prompt dialogs.",
+  "devDependencies": {},
+  "directories": {},
+  "dist": {
+    "shasum": "21a1636c364a9753a0aaf979da4a095d87f1515f",
+    "tarball": "https://registry.npmjs.org/cordova-plugin-password-dialog/-/cordova-plugin-password-dialog-1.2.0.tgz"
+  },
+  "gitHead": "b7902f5c61d1409fb195a76061d7191d2d97b606",
+  "homepage": "https://github.com/justin-credible/cordova-plugin-password-dialog#readme",
+  "keywords": [
+    "cordova",
+    "password",
+    "change",
+    "dialog",
+    "ecosystem:cordova",
+    "cordova-android",
+    "cordova-ios"
+  ],
+  "license": "MIT",
+  "maintainers": [
+    {
+      "email": "justin.unterreiner@gmail.com",
+      "name": "justin-credible"
+    }
+  ],
+  "name": "cordova-plugin-password-dialog",
+  "optionalDependencies": {},
+  "readme": "ERROR: No README data found!",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/justin-credible/cordova-plugin-password-dialog.git"
+  },
+  "scripts": {},
+  "version": "1.2.0"
+}

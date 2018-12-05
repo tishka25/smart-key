@@ -114,5 +114,7 @@
     <gap:plugin name="cordova-plugin-native-transitions" source="npm" version="0.2.3" />
     <plugin name="cordova-plugin-file" spec="~4.3.3" />
     <plugin name="cordova-plugin-file-transfer" source="npm" spec="~1.5.0" />
+    <plugin name="cordova-plugin-password-dialog" spec="^1.2.0" />
     <engine name="ios" spec="4.5.5" />
+    <engine name="browser" spec="^5.0.4" />
 </widget>
