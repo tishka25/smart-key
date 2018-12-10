@@ -28,7 +28,8 @@ var CHARACTERISTICS = {
     START: 0x62
   },
   PIN_CODE: {
-    UUID: "def231dc-07d4-4a71-b735-811e07d44c07"
+    UUID: "def231dc-07d4-4a71-b735-811e07d44c07",
+    INCORRECT: "<incorrect>"
   },
   DEFAULT: 0x50
 };
@@ -197,7 +198,7 @@ var app = {
       }
       if (event.target.id == "windowRightDown") {
         characteristic = CHARACTERISTICS.WINDOWS.RIGHT.UUID;
-        data[0] = CHARACTERISTICS.WINDOWS.RIGHT.UP;
+        data[0] = CHARACTERISTICS.WINDOWS.RIGHT.DOWN;
       }
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:red;";
@@ -227,6 +228,18 @@ var app = {
     ble.write(deviceId,CAR_SERVICE,characteristic,data.buffer,succes,app.onError);
   },
   enterPin: function(onEnter, onCancel){
+
+    var _onEnter = function(){
+      ble.read(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , (data)=>{
+        alert("Pin Code is: " + data);
+        if(data === CHARACTERISTICS.PIN_CODE.INCORRECT){
+          ble.disconnect(deviceId , ()=>{
+            app.scanForDevices();
+          } , app.onError);
+        }
+      } , app.onError);
+    };
+
     var options = {
       title: "Enter Password",
       message: "Please enter your login password.",
@@ -238,8 +251,8 @@ var app = {
           onCancel();
         } else {
           console.log("User completed the enter password dialog.",result.password);
-          ble.write(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , app.stringToBytes(result.password.toString()) , 
-          ()=>console.log("Writen succesfulyy") , app.onError);
+
+          ble.write(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , app.stringToBytes(result.password.toString()) ,_onEnter , app.onError);
           onEnter(result.password);
         }
       },app.onError);
