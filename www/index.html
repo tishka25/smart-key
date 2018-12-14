@@ -21,34 +21,12 @@
 
 <body style="font-family: 'Helvetica Neue'">
     <div class="app">
-        <!-- <p  style="text-align:center; ">Smart Key</p> -->
-        <div class="toolbar">
-            <div class="toolbar__left" id="backButton">
-                <span class="toolbar-button" data-page="">Back</span>
-            </div>
-            <div class="toolbar__center" id="pageTitle">Navigation Bar</div>
-        </div>
-        <div id="devicesPage" class="pages">
-            <div style="text-align:center">
-                <!-- Rounded switch -->
-                <p>
-                    <nobr>Auto Connect</nobr>
-                </p>
-                <label class="switch">
-                    <input type="checkbox" class="switch__input" id="autoConnectButton">
-                    <div class="switch__toggle">
-                        <div class="switch__handle"></div>
-                    </div>
-                </label>
-            </div>
-            <div style="text-align: center ; margin-top: 1%">
-                <button class="button button--outline" id="refreshButton">Refresh</button>
-            </div>
 
-            <!-- Connecting dialog -->
-            <div id="connectingDialog" hidden="true">
+
+        <!-- Connecting dialog -->
+        <div id="connectingDialog" hidden="true">
                 <div class="dialog-mask">
-                    <div class="dialog">
+                    <div class="dialog"></div>
                         <div class="dialog-container" style="text-align:center">
                             <svg class="progress-circular progress-circular--indeterminate" id="loadIcon" style="padding:25%">
                                 <circle class="progress-circular__background" />
@@ -58,12 +36,51 @@
                             <p style="text-align:center;margin-top:40px;opacity:0.4;">Connecting...</p>
                         </div>
                     </div>
+            </div>
+            <!-- // -->
+
+            <!-- setTime dialog -->
+            <div id="setTimeDialog" hidden="true">
+                <div class="alert-dialog-mask"></div>
+                <div class="alert-dialog">
+                    <div class="alert-dialog-container">
+                        <div class="alert-dialog-title">Set Date/Time</div>
+                        <div class="alert-dialog-content" style="font-size:18px; margin: 40px 40px">
+                            <input class="text-input text-input--underbar" type="datetime-local" id="dateTimeInput" value="2017-06-13T13:00">
+                        </div>
+
+                        <div class="alert-dialog-footer">
+                            <button class="alert-dialog-button" onclick="document.getElementById('alarmSetDialog').hidden=true">Cancel</button>
+                            <button class="alert-dialog-button alert-dialog-button--primal" id="setTimeButton">OK</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- // -->
-            <ul class="list" id="deviceList">
 
-            </ul>
+        
+
+        <div class="toolbar">
+            <div class="toolbar__center" id="pageTitle">Navigation Bar</div>
+        </div>
+
+        <div id="devicesPage" class="pages">
+            <div style="text-align:center">
+                <!-- Rounded switch -->
+                <p><nobr>Auto Connect</nobr></p>
+                <label class="switch">
+                            <input type="checkbox" class="switch__input" id="autoConnectButton">
+                            <div class="switch__toggle">
+                                <div class="switch__handle"></div>
+                            </div>
+                </label>
+            </div>
+                    <div style="text-align: center ; margin-top: 1%">
+                        <button class="button button--outline" id="refreshButton">Refresh</button>
+                    </div>
+                    <ul class="list" id="deviceList">
+        
+                    </ul>
         </div>
 
         <div id="engineControl" class="pages">
@@ -92,23 +109,42 @@
                 </div>
             </div>
         </div>
-        <div id="aboutPage" class="pages" style="margin-top:10%">
+        <div id="lockControl" class="pages" style="text-align:center; padding-top:70% ; font-size:120px;">
+            <div id="lockButtonHolder"onclick="app.writeState(event)">
+                <i class="fas fa-lock" id="lockButton" style=" color: red"></i>
+                <p style="font-size:16px">Unlocked</p>
+            </div>
+            <div id="unlockButtonHolder" hidden="true"onclick="app.writeState(event)">
+                <i class="fas fa-lock-open" id="unlockButton" style=" color: green" ></i>
+                <p style="font-size:16px">Locked</p>
+            </div>
+        </div>
+
+        <div id="aboutPage" class="pages">
             <ul class="list">
+                <li class="list-header">
+                    TODO
+                </li>
                 <li class="list-item">
                     <div class="list-item__center">
                         <div class="list-item__title">
                             Model Name:
                         </div>
-                        <div class="list-item__subtitle">
-                            Name
+                        <div class="list-item__subtitle" id="modelName">
                         </div>
                     </div>
                 </li>
-
-                <li class="list-item list-item--tappable" id="debugPageButton" hidden="true" onclick="app.showPage(debugPage , 'Debug Page')">
+                <li class="list-item list-item--tappable" id="setAlarmButton">
+                    <div class="list-item__center">Set alarm event</div>
+                </li>
+                <li class="list-item list-item--tappable" id="setCurrectTimeButton">
+                    <div class="list-item__center">Set time on remote device</div>
+                </li>
+                <li class="list-item list-item--tappable" id="debugPageButton" hidden="true" onclick="app.showPage('debugPage' , 'Debug Page' , 'aboutPage') ; ">
                     <div class="list-item__center">Debug Page</div>
                 </li>
-
+            </ul>
+                <ul class="list" style="margin-top: 10%">
                 <li class="list-item list-item--tappable" id="disconnectButton">
                     <div class="list-item__center">Disconnect</div>
                 </li>
@@ -150,34 +186,49 @@
                         </div>
                     </div>
                 </li>
+                <li class="list-item">
+                        <div class="list-item__center">
+                            <div class="list-item__title">
+                                Locked/Unlocked:
+                            </div>
+                            <div class="list-item__subtitle" id="lockedValue">
+    
+                            </div>
+                        </div>
+                </li>
             </ul>
         </div>
 
 
+            <div class="tabbar" style="position:fixed">
+                <label class="tabbar__item">
+                    <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage('engineControl', 'Engine Control')">
+                    <button class="tabbar__button">
+                        <i class="tabbar__icon fas fa-car"></i>
+                        <div class="tabbar__label">Engine</div>
+                    </button>
+                </label>
 
+                <label class="tabbar__item">
+                    <input type="radio" name="tabbar-c" id="windowControllButton" onclick="app.showPage('windowControl', 'Window Control')">
+                    <button class="tabbar__button" style="text-align:center">
+                        <i class="tabbar__icon fas fa-arrows-alt-v"></i>
+                        <div class="tabbar__label">Windows</div>
+                    </button>
+                </label>
 
-        <div class="tabbar" style="position:fixed">
-            <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage(engineControl, 'Engine Control')">
-                <button class="tabbar__button">
-                    <i class="tabbar__icon fas fa-car"></i>
-                    <div class="tabbar__label">Engine</div>
-                </button>
-            </label>
-
-            <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="windowControllButton" onclick="app.showPage(windowControl, 'Window Control')">
-                <button class="tabbar__button" style="text-align:center">
-                    <i class="tabbar__icon fas fa-arrows-alt-v"></i>
-                    <div class="tabbar__label">Windows</div>
-                </button>
-            </label>
-
-            <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="aboutPageButton" onclick="app.showPage(aboutPage, 'About')">
-                <button class="tabbar__button">
-                    <i class="tabbar__icon fas fa-info"></i>
-                    <div class="tabbar__label">About</div>
+                <label class="tabbar__item">
+                    <input type="radio" name="tabbar-c" id="lockControlButton" onclick="app.showPage('lockControl', 'Lock/Unlock')">
+                    <button class="tabbar__button">
+                        <i class="tabbar__icon fas fa-user-lock"></i>                    
+                        <div class="tabbar__label">Lock/Unlock</div>
+                    </button>
+                </label>
+                <label class="tabbar__item">
+                    <input type="radio" name="tabbar-c" id="aboutPageButton" onclick="app.showPage('aboutPage', 'About')">
+                    <button class="tabbar__button">
+                        <i class="tabbar__icon fas fa-info"></i>
+                        <div class="tabbar__label">About</div>
                 </button>
             </label>
         </div>

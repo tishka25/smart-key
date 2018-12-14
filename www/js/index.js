@@ -8,8 +8,13 @@
 "use strict";
 
 //SERVICES AND CHARACTERISTIC
+var MANUFACTURER_SERVICE = "0000180a-0000-1000-8000-00805F9B34FB";
+var MANUFACTURER_NAME = "00002a29-0000-1000-8000-00805F9B34FB";
+
+
 var CAR_SERVICE = "ca227c6b-d187-4aaf-b330-37144d84b02c";
 var CHARACTERISTICS = {
+  DEFAULT: 0x50,
   WINDOWS: {
     LEFT: {
       UUID: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
@@ -27,11 +32,17 @@ var CHARACTERISTICS = {
     ON: 0x60,
     START: 0x62
   },
+  LOCK_CONTROL: {
+    UUID: "aface04c-7963-43ec-a172-bedeb1b49570",
+    UNLOCK: 0x81
+  },
   PIN_CODE: {
     UUID: "def231dc-07d4-4a71-b735-811e07d44c07",
-    INCORRECT: "<incorrect>"
+    CORRECT: "<correct>"
   },
-  DEFAULT: 0x50
+  CLOCK: {
+    UUID: "6bbdd85f-c398-4075-abad-62d3ba40916a"
+  }
 };
 
 //Device to autoConnect
@@ -40,9 +51,7 @@ var CHARACTERISTICS = {
 var deviceId = null;
 //
 
-//Interval to read all states
-var readStatesInterval = null;
-//
+var isLocked= null;
 
 var app = {
   initialize: function() {
@@ -52,6 +61,15 @@ var app = {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
     disconnectButton.addEventListener("click", this.disconnect, false);
+    // setAlarmButton.addEventListener("click" , this.setTime , false);
+    setCurrentTimeButton.addEventListener("click" , function(){
+      setTimeDialog.dataset.characteristic = CHARACTERISTICS.CLOCK.UUID;
+      setTimeDialog.hidden = false;
+    } , false);
+    setTimeButton.addEventListener("click" , function(){
+      ble.write(deviceId , CAR_SERVICE , setTimeDialog.dataset.characteristic , ()=>console.log("OKUREEC") , app.onError);
+    } , false);
+
 
     //Auto connect
     autoConnectButton.addEventListener(
@@ -71,17 +89,32 @@ var app = {
     StatusBar.overlaysWebView(true);
     StatusBar.styleDefault();
 
-    ble.isEnabled(
-      () => console.log("Enabled"),
-      () => navigator.notification.alert("Bluetooth isn't enabled")
-    );
+    ble.isEnabled(() => console.log("Enabled"),() => navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
 
   },
   initialSetup: function() {
-    app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.LEFT.UUID,windowLeftValue,"");
-    app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.RIGHT.UUID,windowRightValue,"");
-    app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.IGNITION.UUID,ignitionValue,"");
+    //Subscribe to all characteristic
+    app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.LEFT.UUID,windowLeftValue,"" , false );
+    // app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.RIGHT.UUID,windowRightValue,"" , false);
+    // app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.IGNITION.UUID,ignitionValue,"" , false);
+    // app.subscribeCharacteristic(CAR_SERVICE ,CHARACTERISTICS.LOCK_CONTROL.UUID , lockedValue , "" , false , function(data){
+    //   console.log("Lock value is: " + data + "    " + CHARACTERISTICS.LOCK_CONTROL.UNLOCK);
+
+    //   if(data == CHARACTERISTICS.LOCK_CONTROL.UNLOCK){
+    //     lockButtonHolder.hidden = true;
+    //     unlockButtonHolder.hidden = false;
+    //     nativetransitions.fade(0.2);
+    //   }else if(data == CHARACTERISTICS.DEFAULT){
+    //     lockButtonHolder.hidden = false;
+    //     unlockButtonHolder.hidden = true;
+    //     nativetransitions.fade(0.2);
+        
+    //   }
+    // });
+    
+    //
+
   },
   autoConnect: function() {
     console.log("Auto connect searching");
@@ -98,7 +131,7 @@ var app = {
   },
   scanForDevices: function() {
     app.emptyLists();
-    app.showPage(devicesPage, "Select a device");
+    app.showPage('devicesPage', "Select a device");
     // scan for all devices
     ble.startScanWithOptions([],{ reportDuplicates: false },app.onDiscoverDevice,app.onError);
     // //Stop after 5 sec
@@ -141,9 +174,9 @@ var app = {
     console.log("\n Device ID :" + deviceId + "\n");
     var onConnect = function(data) {
       connectingDialog.hidden = true;
-      app.enterPin(function(pin){
+      app.enterPin(function(){
+        app.showPage('engineControl', "Engine Control");
         app.initialSetup();
-        app.showPage(engineControl, "Engine Control");
       },function(){
         app.disconnect();
         app.scanForDevices();
@@ -153,15 +186,22 @@ var app = {
   },
   disconnect: function(event) {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
-    clearInterval(readStatesInterval);
     app.scanForDevices();
   },
 
   //Helper functions
-  subscribeCharacteristic: function(service, characteristic, target, text) {
+  subscribeCharacteristic: function(service, characteristic, target, text , isString , onReadCallback) {
+    var txt = "null";
     var onNotification = function(buffer) {
       var data = new Uint8Array(buffer);
-      target.innerHTML = text + ("0x" + (data[0] >>> 0).toString(16));
+      // target.innerHTML = text + ("0x" + (data[0] >>> 0).toString(16));
+      if(!isString)
+        txt = "0x" + (data[0] >>> 0).toString(16);
+      else
+        txt = String.fromCharCode.apply(null, data);
+      target.innerHTML = text + txt;
+      if(onReadCallback)
+        onReadCallback(data[0]);
     };
     ble.startNotification(
       deviceId,
@@ -171,10 +211,15 @@ var app = {
       app.onError
     );
   },
-  readCharacteristic: function(service, characteristic, target, text) {
+  readCharacteristic: function(service, characteristic, target, text , isString) {
     var onRead = function(buffer) {
       var data = new Uint8Array(buffer);
-      target.innerHTML = text + (data[0] >>> 0).toString(16);
+      var txt="";
+      if(!isString)
+        txt = (data[0] >>> 0).toString(16);
+      else
+        txt = String.fromCharCode.apply(null, data);
+      target.innerHTML = text + txt;
     };
     ble.read(deviceId, service, characteristic, onRead, app.onError);
   },
@@ -183,7 +228,17 @@ var app = {
     var characteristic = null;
 
     var data = new Uint8Array(1);
-    if (event.type === "touchstart") {
+
+    if(event.type === "click"){
+      if(event.target.id === "lockButton"){
+        characteristic = CHARACTERISTICS.LOCK_CONTROL.UUID;
+        data[0] = CHARACTERISTICS.LOCK_CONTROL.UNLOCK;
+      }else if(event.target.id === "unlockButton"){
+        characteristic = CHARACTERISTICS.LOCK_CONTROL.UUID;
+        data[0] = CHARACTERISTICS.DEFAULT;        
+      }
+    }
+    else if (event.type === "touchstart") {
       if (event.target.id == "windowLeftUp") {
         characteristic = CHARACTERISTICS.WINDOWS.LEFT.UUID;
         data[0] = CHARACTERISTICS.WINDOWS.LEFT.UP;
@@ -227,19 +282,13 @@ var app = {
     console.log("\n" + characteristic + "\n");
     ble.write(deviceId,CAR_SERVICE,characteristic,data.buffer,succes,app.onError);
   },
+  setTime: function(event){
+    var date = dateTimeInput.value;
+    if(event.target.id == "setCurrentTimeButton"){
+
+    }
+  },
   enterPin: function(onEnter, onCancel){
-
-    var _onEnter = function(){
-      ble.read(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , (data)=>{
-        alert("Pin Code is: " + data);
-        if(data === CHARACTERISTICS.PIN_CODE.INCORRECT){
-          ble.disconnect(deviceId , ()=>{
-            app.scanForDevices();
-          } , app.onError);
-        }
-      } , app.onError);
-    };
-
     var options = {
       title: "Enter Password",
       message: "Please enter your login password.",
@@ -252,16 +301,16 @@ var app = {
         } else {
           console.log("User completed the enter password dialog.",result.password);
 
-          ble.write(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , app.stringToBytes(result.password.toString()) ,_onEnter , app.onError);
-          onEnter(result.password);
+          ble.write(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , app.stringToBytes(result.password.toString()) , onEnter , app.onError);
+          // onEnter(result.password);
         }
-      },app.onError);
-
+      });
   },
   emptyLists: function() {
     deviceList.innerHTML = ""; // empties the list
   },
-  showPage: function(page, title) {
+  showPage: function(pageId, title) {
+    var  page = document.getElementById(pageId);
     var pages = document.getElementsByClassName("pages");
     for (var i = 0; i < pages.length; i++) {
       pages[i].hidden = true;
