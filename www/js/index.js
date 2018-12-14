@@ -8,40 +8,37 @@
 "use strict";
 
 //SERVICES AND CHARACTERISTIC
-var MANUFACTURER_SERVICE = "0000180a-0000-1000-8000-00805F9B34FB";
-var MANUFACTURER_NAME = "00002a29-0000-1000-8000-00805F9B34FB";
-
 
 var CAR_SERVICE = "ca227c6b-d187-4aaf-b330-37144d84b02c";
-var CHARACTERISTICS = {
+var Characteristic = {
+  UUID: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
   DEFAULT: 0x50,
-  WINDOWS: {
-    LEFT: {
-      UUID: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
+  windows: {
+    left: {
       UP: 0x51,
-      DOWN: 0x52
+      DOWN: 0x52,
+      currentValue: 0x50
     },
-    RIGHT: {
-      UUID: "96cc6576-b9b0-443b-b8e6-546bbd20d374",
+    right: {
       UP: 0x54,
-      DOWN: 0x55
+      DOWN: 0x55,
+      currentValue: 0x50
     }
   },
-  IGNITION: {
-    UUID: "4ad1bbf1-b3e6-4239-a3bb-520624ee1329",
+  ignition: {
     ON: 0x60,
-    START: 0x62
+    START: 0x62,
+    currentValue: 0x50
   },
-  LOCK_CONTROL: {
-    UUID: "aface04c-7963-43ec-a172-bedeb1b49570",
-    UNLOCK: 0x81
+  centralLocking: {
+    UNLOCK: 0x75,
+    currentValue: 0x50
   },
-  PIN_CODE: {
-    UUID: "def231dc-07d4-4a71-b735-811e07d44c07",
-    CORRECT: "<correct>"
+  password: {
+    currentValue: ""
   },
   CLOCK: {
-    UUID: "6bbdd85f-c398-4075-abad-62d3ba40916a"
+    currentValue: ""
   }
 };
 
@@ -63,7 +60,7 @@ var app = {
     disconnectButton.addEventListener("click", this.disconnect, false);
     // setAlarmButton.addEventListener("click" , this.setTime , false);
     setCurrentTimeButton.addEventListener("click" , function(){
-      setTimeDialog.dataset.characteristic = CHARACTERISTICS.CLOCK.UUID;
+      setTimeDialog.dataset.characteristic = Characteristic.CLOCK.UUID;
       setTimeDialog.hidden = false;
     } , false);
     setTimeButton.addEventListener("click" , function(){
@@ -95,17 +92,28 @@ var app = {
   },
   initialSetup: function() {
     //Subscribe to all characteristic
-    app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.LEFT.UUID,windowLeftValue,"" , false );
-    // app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.WINDOWS.RIGHT.UUID,windowRightValue,"" , false);
-    // app.subscribeCharacteristic(CAR_SERVICE,CHARACTERISTICS.IGNITION.UUID,ignitionValue,"" , false);
-    // app.subscribeCharacteristic(CAR_SERVICE ,CHARACTERISTICS.LOCK_CONTROL.UUID , lockedValue , "" , false , function(data){
-    //   console.log("Lock value is: " + data + "    " + CHARACTERISTICS.LOCK_CONTROL.UNLOCK);
+    app.subscribeCharacteristic(CAR_SERVICE,Characteristic.UUID,windowLeftValue,"" , true , function(data){
+      var isLocked = data[3]
+      console.log("Lock value is: " + isLocked + "    " + Characteristic.centralLocking.UNLOCK);
 
-    //   if(data == CHARACTERISTICS.LOCK_CONTROL.UNLOCK){
+        if(isLocked == Characteristic.centralLocking.UNLOCK){
+        lockButtonHolder.hidden = true;
+        unlockButtonHolder.hidden = false;
+        nativetransitions.fade(0.2);
+      }else if(isLocked == Characteristic.DEFAULT){
+        lockButtonHolder.hidden = false;
+        unlockButtonHolder.hidden = true;
+        nativetransitions.fade(0.2);
+      }
+    });
+    // app.subscribeCharacteristic(CAR_SERVICE ,Characteristic.centralLocking.UUID , lockedValue , "" , false , function(data){
+    //   console.log("Lock value is: " + data + "    " + Characteristic.centralLocking.UNLOCK);
+
+    //   if(data == Characteristic.centralLocking.UNLOCK){
     //     lockButtonHolder.hidden = true;
     //     unlockButtonHolder.hidden = false;
     //     nativetransitions.fade(0.2);
-    //   }else if(data == CHARACTERISTICS.DEFAULT){
+    //   }else if(data == Characteristic.DEFAULT){
     //     lockButtonHolder.hidden = false;
     //     unlockButtonHolder.hidden = true;
     //     nativetransitions.fade(0.2);
@@ -173,14 +181,16 @@ var app = {
     connectingDialog.hidden = false;
     console.log("\n Device ID :" + deviceId + "\n");
     var onConnect = function(data) {
+      app.showPage('engineControl', "Engine Control");
+      app.initialSetup();
       connectingDialog.hidden = true;
-      app.enterPin(function(){
-        app.showPage('engineControl', "Engine Control");
-        app.initialSetup();
-      },function(){
-        app.disconnect();
-        app.scanForDevices();
-      });
+      // app.enterPin(function(){
+      //   app.showPage('engineControl', "Engine Control");
+      //   app.initialSetup();
+      // },function(){
+      //   app.disconnect();
+      //   app.scanForDevices();
+      // });
     };
     ble.connect(deviceId,onConnect,app.disconnect);
   },
@@ -196,12 +206,12 @@ var app = {
       var data = new Uint8Array(buffer);
       // target.innerHTML = text + ("0x" + (data[0] >>> 0).toString(16));
       if(!isString)
-        txt = "0x" + (data[0] >>> 0).toString(16);
+        txt = "0x" + (data >>> 0).toString(16);
       else
         txt = String.fromCharCode.apply(null, data);
       target.innerHTML = text + txt;
       if(onReadCallback)
-        onReadCallback(data[0]);
+        onReadCallback(data);
     };
     ble.startNotification(
       deviceId,
@@ -225,61 +235,59 @@ var app = {
   },
   writeState: function(event) {
     var succes = () => console.log("\nWriten succesfully!!!\n");
-    var characteristic = null;
-
-    var data = new Uint8Array(1);
+    
+    var characteristic = Characteristic.UUID;
 
     if(event.type === "click"){
       if(event.target.id === "lockButton"){
-        characteristic = CHARACTERISTICS.LOCK_CONTROL.UUID;
-        data[0] = CHARACTERISTICS.LOCK_CONTROL.UNLOCK;
+        Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
       }else if(event.target.id === "unlockButton"){
-        characteristic = CHARACTERISTICS.LOCK_CONTROL.UUID;
-        data[0] = CHARACTERISTICS.DEFAULT;        
+        Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;        
       }
     }
-    else if (event.type === "touchstart") {
+    if (event.type === "touchstart") {
       if (event.target.id == "windowLeftUp") {
-        characteristic = CHARACTERISTICS.WINDOWS.LEFT.UUID;
-        data[0] = CHARACTERISTICS.WINDOWS.LEFT.UP;
+        // data[1] = Characteristic.windows.left.UP;
+        Characteristic.windows.left.currentValue = Characteristic.windows.left.UP;
       }
       if (event.target.id == "windowLeftDown") {
-        characteristic = CHARACTERISTICS.WINDOWS.LEFT.UUID;
-        data[0] = CHARACTERISTICS.WINDOWS.LEFT.DOWN;
+        // data[1] = Characteristic.windows.left.DOWN;
+        Characteristic.windows.left.currentValue = Characteristic.windows.left.DOWN;
       }
       if (event.target.id == "windowRightUp") {
-        characteristic = CHARACTERISTICS.WINDOWS.RIGHT.UUID;
-        data[0] = CHARACTERISTICS.WINDOWS.RIGHT.UP;
+        // data[2] = Characteristic.windows.right.UP;
+        Characteristic.windows.right.currentValue = Characteristic.windows.right.UP;
       }
       if (event.target.id == "windowRightDown") {
-        characteristic = CHARACTERISTICS.WINDOWS.RIGHT.UUID;
-        data[0] = CHARACTERISTICS.WINDOWS.RIGHT.DOWN;
+        // data[2] = Characteristic.windows.right.DOWN;
+        Characteristic.windows.right.currentValue = Characteristic.windows.right.DOWN;
       }
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:red;";
-        characteristic = CHARACTERISTICS.IGNITION.UUID;
-        data[0] = CHARACTERISTICS.IGNITION.ON;
+        // data[0] = Characteristic.ignition.ON;
+        Characteristic.ignition.currentValue = Characteristic.ignition.ON;
       }
     } else if (event.type == "touchend") {
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:none";
-        characteristic = CHARACTERISTICS.IGNITION.UUID;
-        data[0] = CHARACTERISTICS.DEFAULT;
+        // data[0] = Characteristic.DEFAULT;
+        Characteristic.ignition.currentValue = Characteristic.DEFAULT;
       } else if (
-        event.target.id == "windowLeftDown" ||
-        event.target.id == "windowLeftUp"
-      ) {
-        characteristic = CHARACTERISTICS.WINDOWS.LEFT.UUID;
-        data[0] = CHARACTERISTICS.DEFAULT;
+        event.target.id == "windowLeftDown" || event.target.id == "windowLeftUp") {
+        // data[1] = Characteristic.DEFAULT;
+        Characteristic.windows.left.currentValue = Characteristic.DEFAULT;
       } else if (
-        event.target.id == "windowRightDown" ||
-        event.target.id == "windowRightUp"
-      ) {
-        characteristic = CHARACTERISTICS.WINDOWS.RIGHT.UUID;
-        data[0] = CHARACTERISTICS.DEFAULT;
+        event.target.id == "windowRightDown" || event.target.id == "windowRightUp") {
+        // data[2] = Characteristic.DEFAULT;
+        Characteristic.windows.right.currentValue = Characteristic.DEFAULT;
       }
     }
-    console.log("\n" + characteristic + "\n");
+    // data = Characteristic.ignition.currentValue + Characteristic.windows.left.currentValue + Characteristic.windows.right.currentValue;
+    var data = new Uint8Array([Characteristic.ignition.currentValue ,
+      Characteristic.windows.left.currentValue ,
+      Characteristic.windows.right.currentValue, 
+      Characteristic.centralLocking.currentValue]);
+    console.log("\n" + data.buffer + "\n");
     ble.write(deviceId,CAR_SERVICE,characteristic,data.buffer,succes,app.onError);
   },
   setTime: function(event){
@@ -301,7 +309,7 @@ var app = {
         } else {
           console.log("User completed the enter password dialog.",result.password);
 
-          ble.write(deviceId , CAR_SERVICE , CHARACTERISTICS.PIN_CODE.UUID , app.stringToBytes(result.password.toString()) , onEnter , app.onError);
+          ble.write(deviceId , CAR_SERVICE , Characteristic.password.UUID , app.stringToBytes(result.password.toString()) , onEnter , app.onError);
           // onEnter(result.password);
         }
       });
