@@ -35,10 +35,13 @@ var Characteristic = {
     currentValue: 0x50
   },
   password: {
+    UUID:"def231dc-07d4-4a71-b735-811e07d44c07" ,
     currentValue: ""
   },
-  CLOCK: {
-    currentValue: ""
+  DATE: {
+    currentValue: "",
+    SET_DATE_TIME: "1",
+    //TODO
   }
 };
 
@@ -47,8 +50,11 @@ var Characteristic = {
 // var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
 var deviceId = null;
 //
+var characteristicValue = null;
 
-var isLocked= null;
+//The buffer to be sent
+var dataBuffer = new Uint8Array(15);
+
 
 var app = {
   initialize: function() {
@@ -58,14 +64,18 @@ var app = {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
     disconnectButton.addEventListener("click", this.disconnect, false);
-    // setAlarmButton.addEventListener("click" , this.setTime , false);
-    setCurrentTimeButton.addEventListener("click" , function(){
-      setTimeDialog.dataset.characteristic = Characteristic.CLOCK.UUID;
+    setAlarmButton.addEventListener("click" , function(){
+      setAlarmDialog.hidden = false;
+    }
+    , false);
+    setCurrentTimeButton.addEventListener("click" ,function(){
       setTimeDialog.hidden = false;
     } , false);
-    setTimeButton.addEventListener("click" , function(){
-      ble.write(deviceId , CAR_SERVICE , setTimeDialog.dataset.characteristic , ()=>console.log("OKUREEC") , app.onError);
-    } , false);
+
+
+    // setTimeButton.addEventListener("click" , function(){
+    //   ble.write(deviceId , CAR_SERVICE , setTimeDialog.dataset.characteristic , ()=>console.log("OKUREEC") , app.onError);
+    // } , false);
 
 
     //Auto connect
@@ -93,36 +103,21 @@ var app = {
   initialSetup: function() {
     //Subscribe to all characteristic
     app.subscribeCharacteristic(CAR_SERVICE,Characteristic.UUID,windowLeftValue,"" , true , function(data){
-      var isLocked = data[3]
-      console.log("Lock value is: " + isLocked + "    " + Characteristic.centralLocking.UNLOCK);
+      //Set the date command to DEFAULT
+      data[14] = 48;
+      dataBuffer.set(data,0);
 
+      var isLocked = dataBuffer[3];
         if(isLocked == Characteristic.centralLocking.UNLOCK){
         lockButtonHolder.hidden = true;
         unlockButtonHolder.hidden = false;
-        nativetransitions.fade(0.2);
+        // nativetransitions.fade(0.2);
       }else if(isLocked == Characteristic.DEFAULT){
         lockButtonHolder.hidden = false;
         unlockButtonHolder.hidden = true;
-        nativetransitions.fade(0.2);
+        // nativetransitions.fade(0.2);
       }
     });
-    // app.subscribeCharacteristic(CAR_SERVICE ,Characteristic.centralLocking.UUID , lockedValue , "" , false , function(data){
-    //   console.log("Lock value is: " + data + "    " + Characteristic.centralLocking.UNLOCK);
-
-    //   if(data == Characteristic.centralLocking.UNLOCK){
-    //     lockButtonHolder.hidden = true;
-    //     unlockButtonHolder.hidden = false;
-    //     nativetransitions.fade(0.2);
-    //   }else if(data == Characteristic.DEFAULT){
-    //     lockButtonHolder.hidden = false;
-    //     unlockButtonHolder.hidden = true;
-    //     nativetransitions.fade(0.2);
-        
-    //   }
-    // });
-    
-    //
-
   },
   autoConnect: function() {
     console.log("Auto connect searching");
@@ -160,9 +155,6 @@ var app = {
     title.appendChild(subTitle);
     outerDiv.appendChild(title);
     listItem.appendChild(outerDiv);
-
-    // listItem.innerHTML = html;
-    // listItem.dataset.deviceId = device.id; // TODO
     console.log("\n Device ID Before Click:" + listItem.id + "\n");
 
     listItem.addEventListener("click",function() {
@@ -172,10 +164,6 @@ var app = {
       false
     );
     deviceList.appendChild(listItem);
-    // for (var i = 0; i < deviceList.children.length; i++) {
-    //   var _device = deviceList.children[i];
-    //   _device.addEventListener("click", app.connect, false);
-    // }
   },
   connect: function(e) {
     connectingDialog.hidden = false;
@@ -184,18 +172,19 @@ var app = {
       app.showPage('engineControl', "Engine Control");
       app.initialSetup();
       connectingDialog.hidden = true;
-      // app.enterPin(function(){
-      //   app.showPage('engineControl', "Engine Control");
-      //   app.initialSetup();
-      // },function(){
-      //   app.disconnect();
-      //   app.scanForDevices();
-      // });
+      app.enterPin(function(){
+        app.showPage('engineControl', "Engine Control");
+        app.initialSetup();
+      },function(){
+        app.disconnect();
+        app.scanForDevices();
+      });
     };
     ble.connect(deviceId,onConnect,app.disconnect);
   },
   disconnect: function(event) {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
+    deviceId = null;
     app.scanForDevices();
   },
 
@@ -282,34 +271,61 @@ var app = {
         Characteristic.windows.right.currentValue = Characteristic.DEFAULT;
       }
     }
-    // data = Characteristic.ignition.currentValue + Characteristic.windows.left.currentValue + Characteristic.windows.right.currentValue;
-    var data = new Uint8Array([Characteristic.ignition.currentValue ,
+
+    var data = [Characteristic.ignition.currentValue ,
       Characteristic.windows.left.currentValue ,
       Characteristic.windows.right.currentValue, 
-      Characteristic.centralLocking.currentValue]);
-    console.log("\n" + data.buffer + "\n");
-    ble.write(deviceId,CAR_SERVICE,characteristic,data.buffer,succes,app.onError);
+      Characteristic.centralLocking.currentValue];
+
+    dataBuffer.set(data , 0);
+    // console.log("\n" + dataBuffer.buffer + "\n");
+    ble.write(deviceId,CAR_SERVICE,characteristic,dataBuffer.buffer,succes,app.onError);
   },
   setTime: function(event){
-    var date = dateTimeInput.value;
-    if(event.target.id == "setCurrentTimeButton"){
+    //The command for setting
+    var command = Characteristic.DATE.SET_DATE_TIME;
+    //Convert current date and time to seconds since Epoch
+    var time = Date.parse(new Date(dateTime.value)) * 0.001; 
 
-    }
+    //TOOD fix
+    time = app.stringToBytes(time.toString() + command);
+
+    dataBuffer.set(time , 4);
+
+    ble.write(deviceId , CAR_SERVICE , Characteristic.UUID , dataBuffer.buffer , function(){
+      dataBuffer.set([48] , 14);
+      setTimeDialog.hidden = true;
+    } , app.onError);
+  },
+  setAlarm: function(event){
+    var command = dateCommand.value;
+    console.log(command);
   },
   enterPin: function(onEnter, onCancel){
     var options = {
       title: "Enter Password",
       message: "Please enter your login password.",
-      minLength: 4
+      minLength: 3
     };
     PasswordDialogPlugin.showEnterPassword(options, function(result) {
         if (result.cancel) {
           console.log("User cancelled the enter password dialog.");
           onCancel();
         } else {
-          console.log("User completed the enter password dialog.",result.password);
+          var pass = result.password;
+          console.log("User completed the enter password dialog.",pass);
+          // p = app.stringToBytes(p + "");
+          // Characteristic.password.currentValue = p;
 
-          ble.write(deviceId , CAR_SERVICE , Characteristic.password.UUID , app.stringToBytes(result.password.toString()) , onEnter , app.onError);
+          // characteristicValue=characteristicValue.slice(0,characteristicValue.byteLength-1);
+          // var pass  = new Uint8Array(characteristicValue.byteLength+p.byteLength);
+          // pass.set(characteristicValue,0);
+          // pass.set(p , characteristicValue.byteLength);
+
+          pass = app.stringToBytes(pass);
+          
+          console.log(pass ,  "Lenght is: " + pass.length);
+          ble.write(deviceId , CAR_SERVICE , Characteristic.password.UUID , pass.buffer , onEnter , app.onError);
           // onEnter(result.password);
         }
       });
@@ -318,16 +334,18 @@ var app = {
     deviceList.innerHTML = ""; // empties the list
   },
   showPage: function(pageId, title) {
-    var  page = document.getElementById(pageId);
-    var pages = document.getElementsByClassName("pages");
-    for (var i = 0; i < pages.length; i++) {
-      pages[i].hidden = true;
+    if(deviceId!=null || pageId=='devicesPage'){
+      var  page = document.getElementById(pageId);
+      var pages = document.getElementsByClassName("pages");
+      for (var i = 0; i < pages.length; i++) {
+        pages[i].hidden = true;
+      }
+      // setTimeout(function(){
+        page.hidden = false;
+        pageTitle.innerHTML = title;
+      // } , 50);
+      // nativetransitions.flip(0.5 , "right");
     }
-    setTimeout(() => {
-      page.hidden = false;
-      pageTitle.innerHTML = title;
-    }, 50);
-    nativetransitions.fade(0.2);
   },
   createFile: function(fileName = "file.txt") {
     var type = window.PERSISTENT;
@@ -417,7 +435,7 @@ var app = {
     for (var i = 0, l = string.length; i < l; i++) {
         array[i] = string.charCodeAt(i);
      }
-     return array.buffer;
+     return array;
   },
   onError: function(reason) {
     navigator.notification.alert("ERROR: " + reason); // real apps should use notification.alert
