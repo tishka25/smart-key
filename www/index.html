@@ -134,14 +134,14 @@
                 </div>
             </div>
         </div>
-        <div id="lockControl" class="pages" style="text-align:center; padding-top:70% ; font-size:120px;">
+        <div id="lockControl" class="pages" style="text-align:center; padding-top:20% ; font-size:120px;">
             <div id="lockButtonHolder" onclick="app.writeState(event)">
                 <i class="fas fa-lock" id="lockButton" style=" color: red"></i>
-                <p style="font-size:16px">Unlocked</p>
+                <p style="font-size:16px">Lock</p>
             </div>
-            <div id="unlockButtonHolder" hidden="true" onclick="app.writeState(event)">
+            <div id="unlockButtonHolder" onclick="app.writeState(event)">
                 <i class="fas fa-lock-open" id="unlockButton" style=" color: green"></i>
-                <p style="font-size:16px">Locked</p>
+                <p style="font-size:16px">Unlock</p>
             </div>
         </div>
 
@@ -159,8 +159,11 @@
                         </div>
                     </div>
                 </li>
+                <li class="list-item list-item--tappable" onclick="app.setAutoConnectDevice()" id="setAutoConnectDeviceButton">
+                    <div class="list-item__center">Auto connect to this device</div>
+                </li>
                 <li class="list-item list-item--tappable" id="setAlarmButton">
-                    <div class="list-item__center">Set alarm event</div>
+                    <div class="list-item__center" style="color: grey">Set alarm event</div>
                 </li>
                 <li class="list-item list-item--tappable" id="setCurrentTimeButton">
                     <div class="list-item__center" >Set time on remote device</div>
