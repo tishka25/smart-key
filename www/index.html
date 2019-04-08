@@ -115,16 +115,16 @@
         </div>
 
         <div id="windowControl" class="pages">
-            <div style="float:left; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
-                <p> Left</p>
+            <div style="text-align: center;padding-top: 40%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                <p> Windows</p>
                 <div>
-                    <i class="fas fa-angle-double-up" style="font-size:70px" id="windowLeftUp"></i>
+                    <i class="fas fa-angle-double-up" style="font-size:70px" id="windowUp"></i>
                 </div>
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
-                    <i class="fas fa-angle-double-down" style="font-size:70px" id="windowLeftDown"></i>
+                    <i class="fas fa-angle-double-down" style="font-size:70px" id="windowDown"></i>
                 </div>
             </div>
-            <div style="float:right; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+            <!-- <div style="float:right; padding:50% 10%" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <p> Right</p>
                 <div>
                     <i class="fas fa-angle-double-up" style="font-size:70px" id="windowRightUp"></i>
@@ -132,17 +132,17 @@
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                     <i class="fas fa-angle-double-down" style="font-size:70px" id="windowRightDown"></i>
                 </div>
-            </div>
+            </div> -->
         </div>
-        <div id="lockControl" class="pages" style="text-align:center; padding-top:20% ; font-size:120px;">
-            <div id="lockButtonHolder" onclick="app.writeState(event)">
+        <div id="lockControl" class="pages" style="text-align:center; padding-top:50% ; font-size:120px;">
+            <div id="lockButtonHolder" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <i class="fas fa-lock" id="lockButton" style=" color: red"></i>
-                <p style="font-size:16px">Lock</p>
+                <p style="font-size:16px">Lock/Unlock</p>
             </div>
-            <div id="unlockButtonHolder" onclick="app.writeState(event)">
+            <!-- <div id="unlockButtonHolder" onclick="app.writeState(event)">
                 <i class="fas fa-lock-open" id="unlockButton" style=" color: green"></i>
                 <p style="font-size:16px">Unlock</p>
-            </div>
+            </div> -->
         </div>
 
         <div id="aboutPage" class="pages">

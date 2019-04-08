@@ -14,16 +14,16 @@ var Characteristic = {
   UUID: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
   DEFAULT: 0x50,
   windows: {
-    left: {
+    // left: {
       UP: 0x51,
       DOWN: 0x52,
       currentValue: 0x50
-    },
-    right: {
-      UP: 0x54,
-      DOWN: 0x55,
-      currentValue: 0x50
-    }
+    // },
+    // right: {
+    //   UP: 0x54,
+    //   DOWN: 0x55,
+    //   currentValue: 0x50
+    // }
   },
   ignition: {
     ON: 0x60,
@@ -142,7 +142,8 @@ var app = {
   },
   scanForDevices: function () {
     app.emptyLists();
-    // app.showPage('devicesPage', "Select a device");
+    
+    app.showPage('devicesPage', "Select a device");
     // scan for all devices
 
     // //TODO remove for debug only
@@ -204,7 +205,6 @@ var app = {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
     deviceId = null;
     password = null;
-    app.scanForDevices();
   },
 
   //Helper functions
@@ -246,30 +246,32 @@ var app = {
 
     var characteristic = Characteristic.UUID;
 
-    if (event.type === "click") {
-      if (event.target.id === "lockButton") {
-        Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
-      } else if (event.target.id === "unlockButton") {
-        Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
-      }
-    }
+    // if (event.type === "click") {
+    //   if (event.target.id === "lockButton") {
+    //     Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
+    //   } else if (event.target.id === "unlockButton") {
+    //     Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
+    //   }
+    // }
     if (event.type === "touchstart") {
-      if (event.target.id == "windowLeftUp") {
-        // data[1] = Characteristic.windows.left.UP;
-        Characteristic.windows.left.currentValue = Characteristic.windows.left.UP;
+      if (event.target.id == "windowUp") {
+        Characteristic.windows.currentValue = Characteristic.windows.UP;
       }
-      if (event.target.id == "windowLeftDown") {
-        // data[1] = Characteristic.windows.left.DOWN;
-        Characteristic.windows.left.currentValue = Characteristic.windows.left.DOWN;
+      if (event.target.id == "windowDown") {
+        Characteristic.windows.currentValue = Characteristic.windows.DOWN;
       }
-      if (event.target.id == "windowRightUp") {
-        // data[2] = Characteristic.windows.right.UP;
-        Characteristic.windows.right.currentValue = Characteristic.windows.right.UP;
+      if(event.target.id == "lockButton"){
+        Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
+        lockButton.className = "fas fa-lock-open"
       }
-      if (event.target.id == "windowRightDown") {
-        // data[2] = Characteristic.windows.right.DOWN;
-        Characteristic.windows.right.currentValue = Characteristic.windows.right.DOWN;
-      }
+      // if (event.target.id == "windowRightUp") {
+      //   // data[2] = Characteristic.windows.right.UP;
+      //   Characteristic.windows.right.currentValue = Characteristic.windows.right.UP;
+      // }
+      // if (event.target.id == "windowRightDown") {
+      //   // data[2] = Characteristic.windows.right.DOWN;
+      //   Characteristic.windows.right.currentValue = Characteristic.windows.right.DOWN;
+      // }
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:red;";
         // data[0] = Characteristic.ignition.ON;
@@ -278,22 +280,25 @@ var app = {
     } else if (event.type == "touchend") {
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:none";
-        // data[0] = Characteristic.DEFAULT;
         Characteristic.ignition.currentValue = Characteristic.DEFAULT;
       } else if (
-        event.target.id == "windowLeftDown" || event.target.id == "windowLeftUp") {
-        // data[1] = Characteristic.DEFAULT;
-        Characteristic.windows.left.currentValue = Characteristic.DEFAULT;
-      } else if (
-        event.target.id == "windowRightDown" || event.target.id == "windowRightUp") {
-        // data[2] = Characteristic.DEFAULT;
-        Characteristic.windows.right.currentValue = Characteristic.DEFAULT;
+        event.target.id == "windowDown" || event.target.id == "windowUp") {
+        Characteristic.windows.currentValue = Characteristic.DEFAULT;
+      } 
+      if(event.target.id == "lockButton"){
+        Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
+        lockButton.className = "fas fa-lock"
       }
+      // else if (
+      //   event.target.id == "windowRightDown" || event.target.id == "windowRightUp") {
+      //   // data[2] = Characteristic.DEFAULT;
+      //   Characteristic.windows.right.currentValue = Characteristic.DEFAULT;
+      // }
     }
 
     var data = [Characteristic.ignition.currentValue,
-    Characteristic.windows.left.currentValue,
-    Characteristic.windows.right.currentValue,
+    Characteristic.windows.currentValue,
+    // Characteristic.windows.right.currentValue,
     Characteristic.centralLocking.currentValue];
 
     dataBuffer.set(data, 0);
