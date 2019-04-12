@@ -1,0 +1,67 @@
+{
+  "prepare_queue": {
+    "installed": [],
+    "uninstalled": []
+  },
+  "config_munge": {
+    "files": {}
+  },
+  "installed_plugins": {
+    "cordova-plugin-battery-status": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-ble-central": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-camera": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-device": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-dialogs": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-file": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-file-transfer": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-geolocation": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-globalization": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-inappbrowser": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-media-capture": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-native-transitions": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-network-information": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-password-dialog": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-statusbar": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-vibration": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    },
+    "cordova-plugin-whitelist": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    }
+  },
+  "dependent_plugins": {
+    "cordova-plugin-compat": {
+      "PACKAGE_NAME": "com.Elsys.SmartKey"
+    }
+  }
+}

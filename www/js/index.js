@@ -14,24 +14,22 @@ var Characteristic = {
   UUID: "3ff8860e-72ca-4a25-9c4e-99c7d3b08e9b",
   DEFAULT: 0x50,
   windows: {
-    // left: {
-      UP: 0x51,
-      DOWN: 0x52,
-      currentValue: 0x50
-    // },
-    // right: {
-    //   UP: 0x54,
-    //   DOWN: 0x55,
-    //   currentValue: 0x50
-    // }
+    UP: 0x51,
+    DOWN: 0x52,
+    currentValue: 0x50
   },
   ignition: {
     ON: 0x60,
+    OFF: 0x50,
     START: 0x62,
     currentValue: 0x50
   },
   centralLocking: {
     UNLOCK: 0x75,
+    currentValue: 0x50
+  },
+  trunk: {
+    OPEN: 0x77,
     currentValue: 0x50
   },
   password: {
@@ -50,6 +48,7 @@ var Characteristic = {
 // var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
 var deviceId = null;
 var password = null;
+var deviceName = null;
 //
 var characteristicValue = null;
 
@@ -64,7 +63,7 @@ var app = {
   bindEvents: function () {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
-    disconnectButton.addEventListener("click", this.disconnect, false);
+    // disconnectButton.addEventListener("click", this.disconnect, false);
     setAlarmButton.addEventListener("click", function () {
       setAlarmDialog.hidden = false;
     }
@@ -73,27 +72,43 @@ var app = {
       setTimeDialog.hidden = false;
     }, false);
 
-    //Auto connect
-    autoConnectButton.addEventListener(
-      "change",
-      function (data) {
-        if (autoConnectButton.checked) {
-          app.autoConnect();
-        } else {
-          return;
-        }
-      },
-      false
-    );
-    //
+    //TODO
+    // //Auto connect
+    // autoConnectButton.addEventListener(
+    //   "change",
+    //   function (data) {
+    //     if (autoConnectButton.checked) {
+    //       app.writeToFile("autoConnection.txt" , "true" , true , function(){
+    //         app.readFile("autoConnection.txt" , function(d){
+    //           console.log("AUTO CONNECTION IS: " + d);
+    //         })
+    //       } , null);
+    //     } else {
+    //       app.writeToFile("autoConnection.txt" , "false" , true , function(){
+    //         app.readFile("autoConnection.txt" , function(d){
+    //           console.log("AUTO CONNECTION IS: " + d);
+    //         })
+    //       } , null);
+    //     }
+    //   },
+    //   false
+    // );
+
+    document.getElementById("autoConnectButton").addEventListener('change', function () {
+      if (this.checked)
+        app.autoConnect();
+      else
+        return;
+    });
+
   },
   onDeviceReady: function () {
+
     app.showPage('devicesPage', "Select a device");
     StatusBar.overlaysWebView(true);
     StatusBar.styleDefault();
-    // ble.isEnabled(() => console.log("Enabled"), () => navigator.notification.alert("Bluetooth isn't enabled"));
-    // app.scanForDevices();
-
+    ble.isEnabled(() => console.log("Enabled"), () => navigator.notification.alert("Bluetooth isn't enabled"));
+    app.scanForDevices();
   },
   initialSetup: function () {
     //Subscribe to all characteristic
@@ -101,88 +116,102 @@ var app = {
       //Set the date command to DEFAULT
       data[14] = 48;
       dataBuffer.set(data, 0);
-
-      // var isLocked = dataBuffer[3];
-      //   if(isLocked == Characteristic.centralLocking.UNLOCK){
-      //   lockButtonHolder.hidden = false;
-      //   unlockButtonHolder.hidden = true;
-      //   // nativetransitions.fade(0.2);
-      // }else if(isLocked == Characteristic.DEFAULT){
-      //   lockButtonHolder.hidden = true;
-      //   unlockButtonHolder.hidden = false;
-      //   // nativetransitions.fade(0.2);
-      // }
     });
+    //Set the model name
+    modelName.innerHTML = deviceName;
+    //
   },
   autoConnect: function () {
-    console.log("Auto connect searching");
     var device = {
       id: null,
       password: null
     };
-    app.readFile("device.txt" , function(data){
+    app.readFile("device.txt", function (data) {
       var buff = JSON.parse(data);
       device.id = buff.id;
       device.password = buff.password;
+      deviceName = buff.name;
+      ble.startScanWithOptions([], { reportDuplicates: false }, onConnect, app.onError);
+      var onConnect = function () {
+        deviceId = device.id;
+        app.showPage('engineControl', "Engine Control");
+
+        connectingDialog.hidden = true;
+        ble.write(device.id, CAR_SERVICE, Characteristic.password.UUID, app.stringToBytes(device.password).buffer, null, function () {
+          navigator.notification.alert("There was an error auto connecting to device");
+          app.disconnect();
+          app.scanForDevices();
+        });
+        app.initialSetup();
+        password = device.password;
+      };
+      ble.autoConnect(device.id, onConnect, app.onError);
     });
-
-    var onConnect = function(){
-      deviceId = device.id;
-      app.showPage('engineControl', "Engine Control");
-      app.initialSetup();
-      connectingDialog.hidden = true;
-      ble.write(device.id, CAR_SERVICE, Characteristic.password.UUID, device.password.buffer, null, function () {
-        navigator.notification.alert("There was an error auto connecting to device");
-        app.disconnect();
-        app.scanForDevices();
-      });
-    }
-    ble.autoConnect(device.id, onConnect, app.onError);
-
   },
   scanForDevices: function () {
     app.emptyLists();
-    
     app.showPage('devicesPage', "Select a device");
-    // scan for all devices
-
-    // //TODO remove for debug only
-    // var device = {
-    //   name: "Smart Car",
-    //   rssi: "-48",
-    //   id: "def231dc-07d4-4a71-b735-811e07d44c07"
-    // }
-    // //
-    // app.onDiscoverDevice(device);
-
     ble.startScanWithOptions([], { reportDuplicates: false }, app.onDiscoverDevice, app.onError);
+
     // //Stop after 5 sec
     setTimeout(ble.stopScan, 5000);
   },
   onDiscoverDevice: function (device) {
-    var listItem = document.createElement("li");
-    listItem.className = "list-item list-item--tappable";
-    var outerDiv = document.createElement("div");
-    outerDiv.className = "list-item__center";
-    var title = document.createElement("div");
-    title.className = "list-item__title";
-    title.innerHTML = device.name;
-    var subTitle = document.createElement("div");
-    subTitle.className = "list-item__subtitle";
-    subTitle.innerHTML = device.rssi;
+    var listItem = document.createElement("ons-list-item");
+    listItem.style = "height: 70px";
+    var leftItem = document.createElement("div");
+    leftItem.className = "left";
+    leftItem.style = "font-size: 18px"
+    leftItem.innerHTML = device.name;
+    var rightItem = document.createElement("div");
+    rightItem.className = "right";
+    rightItem.innerHTML = "RSSI: " + device.rssi;
 
-    title.appendChild(subTitle);
-    outerDiv.appendChild(title);
-    listItem.appendChild(outerDiv);
-    console.log("\n Device ID Before Click:" + listItem.id + "\n");
+    var rssi = Math.abs(device.rssi);
+    if (rssi >= 80) {
+      rightItem.style = "color: #e84343";
+    } else if (rssi >= 50 && rssi < 80) {
+      rightItem.style = "color: #c18817";
+    } else if (rssi < 50) {
+      rightItem.style = "color: #6fe837";
+    }
 
+    listItem.appendChild(leftItem);
+    listItem.appendChild(rightItem);
     listItem.addEventListener("click", function () {
       deviceId = device.id;
+      deviceName = device.name;
       app.connect();
     },
       false
     );
+
+
     deviceList.appendChild(listItem);
+    // var listItem = document.createElement("li");
+    // listItem.className = "list-item list-item--tappable";
+    // var outerDiv = document.createElement("div");
+    // outerDiv.className = "list-item__center";
+    // var title = document.createElement("div");
+    // title.className = "list-item__title";
+    // title.innerHTML = device.name;
+    // var subTitle = document.createElement("div");
+    // subTitle.className = "list-item__subtitle";
+    // subTitle.innerHTML = device.rssi;
+
+    // title.appendChild(subTitle);
+    // outerDiv.appendChild(title);
+    // listItem.appendChild(outerDiv);
+    // console.log("\n Device ID Before Click:" + listItem.id + "\n");
+
+    // listItem.addEventListener("click", function () {
+    //   deviceId = device.id;
+    //   deviceName = device.name;
+    //   app.connect();
+    // },
+    //   false
+    // );
+    // deviceList.appendChild(listItem);
   },
   connect: function (e) {
     connectingDialog.hidden = false;
@@ -205,6 +234,8 @@ var app = {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
     deviceId = null;
     password = null;
+    deviceName = null;
+    connectingDialog.hidden = true;
   },
 
   //Helper functions
@@ -245,14 +276,6 @@ var app = {
     var succes = () => console.log("\nWriten succesfully!!!\n");
 
     var characteristic = Characteristic.UUID;
-
-    // if (event.type === "click") {
-    //   if (event.target.id === "lockButton") {
-    //     Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
-    //   } else if (event.target.id === "unlockButton") {
-    //     Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
-    //   }
-    // }
     if (event.type === "touchstart") {
       if (event.target.id == "windowUp") {
         Characteristic.windows.currentValue = Characteristic.windows.UP;
@@ -260,49 +283,46 @@ var app = {
       if (event.target.id == "windowDown") {
         Characteristic.windows.currentValue = Characteristic.windows.DOWN;
       }
-      if(event.target.id == "lockButton"){
+      if (event.target.id == "lockButton") {
         Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
         lockButton.className = "fas fa-lock-open"
+        lockButton.style = "color: green;"
       }
-      // if (event.target.id == "windowRightUp") {
-      //   // data[2] = Characteristic.windows.right.UP;
-      //   Characteristic.windows.right.currentValue = Characteristic.windows.right.UP;
-      // }
-      // if (event.target.id == "windowRightDown") {
-      //   // data[2] = Characteristic.windows.right.DOWN;
-      //   Characteristic.windows.right.currentValue = Characteristic.windows.right.DOWN;
-      // }
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:red;";
-        // data[0] = Characteristic.ignition.ON;
-        Characteristic.ignition.currentValue = Characteristic.ignition.ON;
+        Characteristic.ignition.currentValue = Characteristic.ignition.START;
+      }
+      if(event.target.id == "openTrunkButton"){
+        Characteristic.trunk.currentValue = Characteristic.trunk.OPEN;
       }
     } else if (event.type == "touchend") {
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:none";
-        Characteristic.ignition.currentValue = Characteristic.DEFAULT;
+        Characteristic.ignition.currentValue = (ignitionSwitchButton.checked) ? Characteristic.ignition.ON : Characteristic.ignition.OFF;
       } else if (
         event.target.id == "windowDown" || event.target.id == "windowUp") {
         Characteristic.windows.currentValue = Characteristic.DEFAULT;
-      } 
+      }
+      if(event.target.id == "openTrunkButton"){
+        Characteristic.trunk.currentValue = Characteristic.DEFAULT;
+      }
       if(event.target.id == "lockButton"){
         Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
         lockButton.className = "fas fa-lock"
+        lockButton.style = "color: red;"
       }
-      // else if (
-      //   event.target.id == "windowRightDown" || event.target.id == "windowRightUp") {
-      //   // data[2] = Characteristic.DEFAULT;
-      //   Characteristic.windows.right.currentValue = Characteristic.DEFAULT;
-      // }
+    } else if (event.type == "change") {
+      if (event.target.id == "ignitionSwitchButton") {
+        Characteristic.ignition.currentValue = (ignitionSwitchButton.checked) ? Characteristic.ignition.ON : Characteristic.ignition.OFF;
+      }
     }
-
     var data = [Characteristic.ignition.currentValue,
     Characteristic.windows.currentValue,
-    // Characteristic.windows.right.currentValue,
-    Characteristic.centralLocking.currentValue];
+    Characteristic.centralLocking.currentValue,
+    Characteristic.trunk.currentValue];
 
     dataBuffer.set(data, 0);
-    // console.log("\n" + dataBuffer.buffer + "\n");
+    console.log("\n\n\n" + dataBuffer + "\n\n\n");
     ble.write(deviceId, CAR_SERVICE, characteristic, dataBuffer.buffer, succes, app.onError);
   },
   setTime: function (event) {
@@ -324,16 +344,17 @@ var app = {
   setAutoConnectDevice: function (event) {
     var _device = {
       id: deviceId,
-      password: password
+      password: password,
+      name: deviceName
     }
     var onConfirm = (index) => {
-      if(index == 1){
+      if (index == 1) {
         app.writeToFile(cordova.file.dataDirectory, "device.txt", JSON.stringify(_device), true, function () {
-          navigator.notification.alert("Auto connect device has been set succesfully", null, "Auto connect");
+          navigator.notification.alert("Auto connect device has been set succesfully with params: " + JSON.stringify(_device), null, "Auto connect");
         }, function (e) {
           app.onError(e);
         });
-      }else{
+      } else {
         return;
       }
     }
@@ -341,7 +362,7 @@ var app = {
       "Are you sure you want to remove the old auto conect device and replace it with the current device?",
       onConfirm,
       'Warning',
-      ['YES', 'NO']
+      ['Yes', 'No']
     );
   },
   setAlarm: function (event) {
@@ -361,9 +382,9 @@ var app = {
       } else {
         password = result.password;
         console.log("User completed the enter password dialog.", password);
-        password = app.stringToBytes(password);
-        console.log(pass, "Lenght is: " + password.length);
-        ble.write(deviceId, CAR_SERVICE, Characteristic.password.UUID, password.buffer, onEnter, app.onError);
+        var pass = app.stringToBytes(password);
+        console.log(pass, "Lenght is: " + pass.length);
+        ble.write(deviceId, CAR_SERVICE, Characteristic.password.UUID, pass.buffer, onEnter, app.onError);
       }
     });
   },
@@ -371,14 +392,14 @@ var app = {
     deviceList.innerHTML = ""; // empties the list
   },
   showPage: function (pageId, title) {
-    // if(deviceId!=null || pageId=='devicesPage'){
-    var page = document.getElementById(pageId);
-    var pages = document.getElementsByClassName("pages");
-    for (var i = 0; i < pages.length; i++) {
-      pages[i].hidden = true;
-    }
-    page.hidden = false;
-    pageTitle.innerHTML = title;
+    // if (deviceId != null || pageId == 'devicesPage') {
+      var page = document.getElementById(pageId);
+      var pages = document.getElementsByClassName("pages");
+      for (var i = 0; i < pages.length; i++) {
+        pages[i].hidden = true;
+      }
+      page.hidden = false;
+      pageTitle.innerHTML = title;
     // }
   },
   /**
@@ -389,7 +410,6 @@ var app = {
    * Returns ERROR_CODE 12 , when the file already exist.
    * It's up to the developer to implement that error.
    * 
-   * @param {Path} path - the path to save that file (usualy use cordova.file.dataDirectory)
    * @param {string} fileName
    * @param {string} information information to put in the file 
    * @param {boolean} override - true to override the file , false not to
@@ -397,15 +417,15 @@ var app = {
    * @param {callback} onError callback when an error occurs
    * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/FileError}
    * @example 
-   * writeToFile(cordova.file.dataDirectory , "Test.txt" , "This is a test text file" , true , function(){
+   * writeToFile("Test.txt" , "This is a test text file" , true , function(){
     *    console.log("Success");
     * } , function(e){
     *    //Error
     *    console.log(e);
     * })
     */
-  writeToFile: function (path, fileName, information, override, onWrite, onError) {
-    window.resolveLocalFileSystemURL(path, function (dir) {
+  writeToFile: function (fileName, information, override, onWrite, onError) {
+    window.resolveLocalFileSystemURL(cordova.file.dataDirectory, function (dir) {
       dir.getFile(
         fileName, { create: true, exclusive: !override },
         function (fileEntry) {
