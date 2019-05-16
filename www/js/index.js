@@ -1,9 +1,5 @@
 // (c) 2018 Teodor Stanishev
 
-/* global mainPage, deviceList, refreshButton */
-/* global detailPage, DeviceInfoState, DeviceInfoStateButton, disconnectButton */
-/* global ble  */
-
 /* jshint browser: true , devel: true*/
 "use strict";
 
@@ -46,8 +42,6 @@ var Characteristic = {
 };
 
 //Device to autoConnect
-//TODO make this read/write from a file
-// var deviceId = "DD7449D0-6F2C-9456-4346-38F5812FA3F4";
 var deviceId = null;
 var password = null;
 var deviceName = null;
@@ -59,9 +53,15 @@ var dataBuffer = new Uint8Array(15);
 
 
 var app = {
+  /**
+   * The function from which the flow of the app begins
+   */
   initialize: function () {
     this.bindEvents();
   },
+  /**
+   * Function to bind all function to specific events
+   */
   bindEvents: function () {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
@@ -85,6 +85,9 @@ var app = {
     });
 
   },
+  /**
+   * Callback function for when "deviceready" events has been called
+   */
   onDeviceReady: function () {
     app.showPage('devicesPage', "Select a device");
     StatusBar.overlaysWebView(true);
@@ -93,6 +96,9 @@ var app = {
     ble.isEnabled(() => console.log("Enabled"), () => navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
   },
+  /**
+   * Initial setup function after a succesful connection has been acquired
+   */
   initialSetup: function () {
     //Subscribe to all characteristic
     app.subscribeCharacteristic(CAR_SERVICE, Characteristic.UUID, null, null, true, function (data) {
@@ -111,6 +117,9 @@ var app = {
       //
     });
   },
+  /**
+   * Auto connect to the specific device that has been saved to internal memory
+   */
   autoConnect: function () {
     var device = {
       id: null,
@@ -138,6 +147,10 @@ var app = {
       ble.autoConnect(device.id, onConnect, app.onError);
     });
   },
+  /**
+   * This function opens the scan page , and initializes the scan for BLE devices.
+   * Usually it is attached to an event
+   */
   scanForDevices: function () {
     app.emptyLists();
     app.showPage('devicesPage');
@@ -146,6 +159,16 @@ var app = {
     // //Stop after 5 sec
     setTimeout(ble.stopScan, 5000);
   },
+  /**
+   * Callback function for BLE devices that have been discovered after a scan.
+   * This function appends the current device to the <ul> element and adds "click" events to the <li>
+   * @param {JSON} device - discovered device object
+   * const device = {
+   *    name: {String},
+   *    rssi: {Int},
+   *    uuid: {String}
+   * }
+   */
   onDiscoverDevice: function (device) {
     var listItem = document.createElement("ons-list-item");
     listItem.style = "height: 70px";
@@ -175,10 +198,13 @@ var app = {
     },
       false
     );
-
-
     deviceList.appendChild(listItem);
   },
+  /**
+   * Connect to the specific device.
+   * After a connection has been made , a prompt appears for password
+   * @param {Event} e 
+   */
   connect: function (e) {
     connectingDialog.hidden = false;
     console.log("\n Device ID :" + deviceId + "\n");
@@ -196,6 +222,10 @@ var app = {
     };
     ble.connect(deviceId, onConnect, app.disconnect);
   },
+  /**
+   * Disconnect from the currently connected device
+   * @param {Event} event 
+   */
   disconnect: function (event) {
     ble.disconnect(deviceId, app.scanForDevices, app.onError);
     deviceId = null;
@@ -203,8 +233,16 @@ var app = {
     deviceName = null;
     connectingDialog.hidden = true;
   },
-
-  //Helper functions
+  /**
+   * Subscribe to a specicic characteristic for notification messages
+   * 
+   * @param {String} service - UUID of the service 
+   * @param {String} characteristic - UUID of the characteristic you wish to subscribe to 
+   * @param {DOM} target - DOM element that is going to print the notification values
+   * @param {String} text - Text before the printed value
+   * @param {Boolean} isString - Is the notification values string or not
+   * @param {callback} onReadCallback - Callback after a notification message has been received
+   */
   subscribeCharacteristic: function (service, characteristic, target, text, isString, onReadCallback) {
     var txt = "null";
     var onNotification = function (buffer) {
@@ -228,6 +266,14 @@ var app = {
       app.onError
     );
   },
+  /**
+   * Read the value of the specific BLE characteristic
+   * @param {String} service - UUID of the service 
+   * @param {String} characteristic - UUID of the characteristic you wish to read from 
+   * @param {DOM} target - DOM element that is going to print the values
+   * @param {String} text - Text before the printed value
+   * @param {Boolean} isString - If the values string or not
+   */
   readCharacteristic: function (service, characteristic, target, text, isString) {
     var onRead = function (buffer) {
       var data = new Uint8Array(buffer);
@@ -240,6 +286,11 @@ var app = {
     };
     ble.read(deviceId, service, characteristic, onRead, app.onError);
   },
+  /**
+   * Event handler function which handles all the writing to the BLE characteristic.
+   * The function checks the event target and passes the correct values.
+   * @param {Event} event - The main parameter from which the function decides what values to put where
+   */
   writeState: function (event) {
     var succes = () => console.log("\nWriten succesfully!!!\n");
     var characteristic = Characteristic.UUID;
@@ -291,6 +342,11 @@ var app = {
     console.log("\n\n\n" + dataBuffer + "\n\n\n");
     ble.write(deviceId, CAR_SERVICE, characteristic, dataBuffer.buffer, succes, app.onError);
   },
+  /**
+   * Sets the alarm event for the Smart car.
+   * Converts the set time to Epoch seconds, passes the set event type(command) and writes it to the Characteristic
+   * @param {Event} event - unused
+   */
   setAlarm: function (event) {
    //The command for setting
    var command = Characteristic.DATE.CENTRAL_LOCK;
@@ -307,6 +363,11 @@ var app = {
      setAlarmDialog.hidden = true;
     }, app.onError);
   },
+  /**
+   * Set the current time on the RTC(Real time clock) on the Smart car
+   * Converts the set time to Epoch seconds, passes the set command(SET_TIME_ON_RTC) and writes it to the Characteristic
+   * @param {Event} event - unused
+   */
   setTime: function (event) {
     //The command for setting
     var command = Characteristic.DATE.SET_DATE_TIME;
@@ -323,6 +384,10 @@ var app = {
       setTimeDialog.hidden = true;
     }, app.onError);
   },
+  /**
+   * Saves the currently connected device to internal memory , so it can be used for auto connecting later
+   * @param {Event} event - unused
+   */
   setAutoConnectDevice: function (event) {
     var _device = {
       id: deviceId,
@@ -347,6 +412,12 @@ var app = {
       ['Yes', 'No']
     );
   },
+  /**
+   * Handler function for showing a password promt and writing the entered value 
+   * to the password characteristic on the remote device.
+   * @param {callback} onEnter - callback function after user clicking "OK"
+   * @param {callback} onCancel - callback function after user canceling the promt
+   */
   enterPin: function (onEnter, onCancel) {
     var options = {
       title: "Enter Password",
@@ -366,11 +437,19 @@ var app = {
       }
     });
   },
+  /**
+   * Empties the device list.
+   */
   emptyLists: function () {
-    deviceList.innerHTML = ""; // empties the list
+    deviceList.innerHTML = "";
   },
+  /**
+   * Shows the page with the passed pageId and hides all the other pages.
+   * This function works only with <div> elements that have classname of "pages"
+   * @param {String} pageId - id of the page you wish to show
+   */
   showPage: function (pageId) {
-    // if (deviceId != null || pageId == 'devicesPage') {
+    if (deviceId != null || pageId == 'devicesPage') {
     var page = document.getElementById(pageId);
     var pages = document.getElementsByClassName("pages");
     for (var i = 0; i < pages.length; i++) {
@@ -378,7 +457,7 @@ var app = {
     }
     page.hidden = false;
     // pageTitle.innerHTML = title;
-    // }
+    }
   },
   /**
    * Helper function that uses the HTML File API.
@@ -488,6 +567,10 @@ var app = {
       );
     });
   },
+  /**
+   * Helper function for convering string values to Uint8Array 
+   * @param {String} string - the String which you wish to convert
+   */
   stringToBytes: function (string) {
     var array = new Uint8Array(string.length);
     for (var i = 0, l = string.length; i < l; i++) {
@@ -495,6 +578,11 @@ var app = {
     }
     return array;
   },
+  /**
+   * Handler function after an error has occured anywhere.
+   * It show a notification message with the error
+   * @param {Object} reason 
+   */
   onError: function (reason) {
     navigator.notification.alert("ERROR: " + reason); // real apps should use notification.alert
     console.log(reason);
