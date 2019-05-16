@@ -21,7 +21,8 @@ var Characteristic = {
   ignition: {
     ON: 0x60,
     OFF: 0x50,
-    START: 0x62,
+    STARTER_ON: 0x62,
+    STARTER_OFF: 0x63,
     currentValue: 0x50
   },
   centralLocking: {
@@ -37,8 +38,9 @@ var Characteristic = {
     currentValue: ""
   },
   DATE: {
-    currentValue: "",
+    currentValue: "0",
     SET_DATE_TIME: "1",
+    CENTRAL_LOCK: "3",
     //TODO
   }
 };
@@ -63,7 +65,6 @@ var app = {
   bindEvents: function () {
     document.addEventListener("deviceready", this.onDeviceReady, false);
     refreshButton.addEventListener("click", this.scanForDevices, false);
-    // disconnectButton.addEventListener("click", this.disconnect, false);
     setAlarmButton.addEventListener("click", function () {
       setAlarmDialog.hidden = false;
     }
@@ -72,27 +73,9 @@ var app = {
       setTimeDialog.hidden = false;
     }, false);
 
-    //TODO
-    // //Auto connect
-    // autoConnectButton.addEventListener(
-    //   "change",
-    //   function (data) {
-    //     if (autoConnectButton.checked) {
-    //       app.writeToFile("autoConnection.txt" , "true" , true , function(){
-    //         app.readFile("autoConnection.txt" , function(d){
-    //           console.log("AUTO CONNECTION IS: " + d);
-    //         })
-    //       } , null);
-    //     } else {
-    //       app.writeToFile("autoConnection.txt" , "false" , true , function(){
-    //         app.readFile("autoConnection.txt" , function(d){
-    //           console.log("AUTO CONNECTION IS: " + d);
-    //         })
-    //       } , null);
-    //     }
-    //   },
-    //   false
-    // );
+    if (document.getElementById("autoConnectButton").checked) {
+      app.autoConnect();
+    }
 
     document.getElementById("autoConnectButton").addEventListener('change', function () {
       if (this.checked)
@@ -103,23 +86,30 @@ var app = {
 
   },
   onDeviceReady: function () {
-
     app.showPage('devicesPage', "Select a device");
     StatusBar.overlaysWebView(true);
     StatusBar.styleDefault();
+    StatusBar.backgroundColorByName("white");
     ble.isEnabled(() => console.log("Enabled"), () => navigator.notification.alert("Bluetooth isn't enabled"));
     app.scanForDevices();
   },
   initialSetup: function () {
     //Subscribe to all characteristic
-    app.subscribeCharacteristic(CAR_SERVICE, Characteristic.UUID, windowLeftValue, "", true, function (data) {
+    app.subscribeCharacteristic(CAR_SERVICE, Characteristic.UUID, null, null, true, function (data) {
       //Set the date command to DEFAULT
       data[14] = 48;
       dataBuffer.set(data, 0);
+      //Update the clock showint the device current time
+      var currDate = new Date(0);
+      //Parse the date from seconds to Date format
+      currDate.setUTCSeconds(parseInt(String.fromCharCode.apply(null, data.subarray(4,14))));
+      //Fix the timezone issue
+      currDate = currDate.toUTCString();
+      console.log(parseInt(String.fromCharCode.apply(null, data.subarray(4,14))) , "Current date and time is: " + currDate);
+      //Show the time
+      dateTimeOnDevice.innerHTML = currDate;
+      //
     });
-    //Set the model name
-    modelName.innerHTML = deviceName;
-    //
   },
   autoConnect: function () {
     var device = {
@@ -150,7 +140,7 @@ var app = {
   },
   scanForDevices: function () {
     app.emptyLists();
-    app.showPage('devicesPage', "Select a device");
+    app.showPage('devicesPage');
     ble.startScanWithOptions([], { reportDuplicates: false }, app.onDiscoverDevice, app.onError);
 
     // //Stop after 5 sec
@@ -188,30 +178,6 @@ var app = {
 
 
     deviceList.appendChild(listItem);
-    // var listItem = document.createElement("li");
-    // listItem.className = "list-item list-item--tappable";
-    // var outerDiv = document.createElement("div");
-    // outerDiv.className = "list-item__center";
-    // var title = document.createElement("div");
-    // title.className = "list-item__title";
-    // title.innerHTML = device.name;
-    // var subTitle = document.createElement("div");
-    // subTitle.className = "list-item__subtitle";
-    // subTitle.innerHTML = device.rssi;
-
-    // title.appendChild(subTitle);
-    // outerDiv.appendChild(title);
-    // listItem.appendChild(outerDiv);
-    // console.log("\n Device ID Before Click:" + listItem.id + "\n");
-
-    // listItem.addEventListener("click", function () {
-    //   deviceId = device.id;
-    //   deviceName = device.name;
-    //   app.connect();
-    // },
-    //   false
-    // );
-    // deviceList.appendChild(listItem);
   },
   connect: function (e) {
     connectingDialog.hidden = false;
@@ -244,11 +210,13 @@ var app = {
     var onNotification = function (buffer) {
       var data = new Uint8Array(buffer);
       // target.innerHTML = text + ("0x" + (data[0] >>> 0).toString(16));
-      if (!isString)
+      if (!isString && isString != null)
         txt = "0x" + (data >>> 0).toString(16);
-      else
+      else if(isString != null)
         txt = String.fromCharCode.apply(null, data);
-      target.innerHTML = text + txt;
+
+      if(target)  
+        target.innerHTML = text + txt;
       if (onReadCallback)
         onReadCallback(data);
     };
@@ -274,7 +242,6 @@ var app = {
   },
   writeState: function (event) {
     var succes = () => console.log("\nWriten succesfully!!!\n");
-
     var characteristic = Characteristic.UUID;
     if (event.type === "touchstart") {
       if (event.target.id == "windowUp") {
@@ -285,28 +252,27 @@ var app = {
       }
       if (event.target.id == "lockButton") {
         Characteristic.centralLocking.currentValue = Characteristic.centralLocking.UNLOCK;
-        lockButton.className = "fas fa-lock-open"
-        lockButton.style = "color: green;"
+        lockButton.className = "fas fa-lock-open";
+        lockButton.style = "color: green;";
       }
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:red;";
-        Characteristic.ignition.currentValue = Characteristic.ignition.START;
+        Characteristic.ignition.currentValue = Characteristic.ignition.STARTER_ON;
       }
-      if(event.target.id == "openTrunkButton"){
+      if (event.target.id == "openTrunkButton") {
         Characteristic.trunk.currentValue = Characteristic.trunk.OPEN;
       }
     } else if (event.type == "touchend") {
       if (event.target.id == "engineStartButton") {
         event.target.style = "border-radius: 100%;background-color:none";
-        Characteristic.ignition.currentValue = (ignitionSwitchButton.checked) ? Characteristic.ignition.ON : Characteristic.ignition.OFF;
-      } else if (
-        event.target.id == "windowDown" || event.target.id == "windowUp") {
+        Characteristic.ignition.currentValue = (ignitionSwitchButton.checked) ? Characteristic.ignition.STARTER_OFF : Characteristic.ignition.OFF;
+      } else if (event.target.id == "windowDown" || event.target.id == "windowUp") {
         Characteristic.windows.currentValue = Characteristic.DEFAULT;
       }
-      if(event.target.id == "openTrunkButton"){
+      if (event.target.id == "openTrunkButton") {
         Characteristic.trunk.currentValue = Characteristic.DEFAULT;
       }
-      if(event.target.id == "lockButton"){
+      if (event.target.id == "lockButton") {
         Characteristic.centralLocking.currentValue = Characteristic.DEFAULT;
         lockButton.className = "fas fa-lock"
         lockButton.style = "color: red;"
@@ -324,6 +290,22 @@ var app = {
     dataBuffer.set(data, 0);
     console.log("\n\n\n" + dataBuffer + "\n\n\n");
     ble.write(deviceId, CAR_SERVICE, characteristic, dataBuffer.buffer, succes, app.onError);
+  },
+  setAlarm: function (event) {
+   //The command for setting
+   var command = Characteristic.DATE.CENTRAL_LOCK;
+   //Convert current date and time to seconds since Epoch
+   var time = Date.parse(new Date(dateTime.value)) * 0.001;
+
+   //TOOD fix
+   time = app.stringToBytes(time.toString() + command);
+
+   dataBuffer.set(time, 4);
+
+   ble.write(deviceId, CAR_SERVICE, Characteristic.UUID, dataBuffer.buffer, function () {
+     dataBuffer.set([48], 14);
+     setAlarmDialog.hidden = true;
+    }, app.onError);
   },
   setTime: function (event) {
     //The command for setting
@@ -365,10 +347,6 @@ var app = {
       ['Yes', 'No']
     );
   },
-  setAlarm: function (event) {
-    var command = dateCommand.value;
-    console.log(command);
-  },
   enterPin: function (onEnter, onCancel) {
     var options = {
       title: "Enter Password",
@@ -391,15 +369,15 @@ var app = {
   emptyLists: function () {
     deviceList.innerHTML = ""; // empties the list
   },
-  showPage: function (pageId, title) {
+  showPage: function (pageId) {
     // if (deviceId != null || pageId == 'devicesPage') {
-      var page = document.getElementById(pageId);
-      var pages = document.getElementsByClassName("pages");
-      for (var i = 0; i < pages.length; i++) {
-        pages[i].hidden = true;
-      }
-      page.hidden = false;
-      pageTitle.innerHTML = title;
+    var page = document.getElementById(pageId);
+    var pages = document.getElementsByClassName("pages");
+    for (var i = 0; i < pages.length; i++) {
+      pages[i].hidden = true;
+    }
+    page.hidden = false;
+    // pageTitle.innerHTML = title;
     // }
   },
   /**

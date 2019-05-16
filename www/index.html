@@ -6,14 +6,16 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
 
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/onsenui.min.css" />
-    <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/old-onsen-css-components.min.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/onsenui.min.css" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/css/old-onsen-css-components.min.css" />
     <link rel="stylesheet" type="text/css" href="css/index.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/onsen/2.10.6/js/onsenui.min.js"></script>
     <script>
         document.addEventListener("contextmenu", function (e) {
-        e.preventDefault();
+            e.preventDefault();
         }, false);
     </script>
     <!-- <title>BLE Controller</title> -->
@@ -33,7 +35,8 @@
                         <circle class="progress-circular__secondary progress-circular--indeterminate__secondary" />
                     </svg>
                     <!-- <p style="text-align:center;margin-top:40px;opacity:0.4;">Connecting...</p> -->
-                    <ons-button id="disconnectButton" modifier="large" onclick="app.disconnect()">Disconnect</ons-button>
+                    <ons-button id="disconnectButton" modifier="large" onclick="app.disconnect()">Disconnect
+                    </ons-button>
                 </div>
             </div>
         </div>
@@ -47,11 +50,14 @@
                 <div class="alert-dialog-container">
                     <div class="alert-dialog-title">Set Date/Time</div>
                     <div class="alert-dialog-content" style="font-size:18px; margin: 40px 40px">
-                        <input class="text-input text-input--underbar" type="datetime-local" id="dateTime" value="2017-06-13T13:00">
+                        <!-- value="2017-06-13T13:00" -->
+                        <input class="text-input text-input--underbar" type="datetime-local" id="dateTime">
                     </div>
                     <div class="alert-dialog-footer">
-                        <button class="alert-dialog-button" onclick="document.getElementById('setTimeDialog').hidden=true">Cancel</button>
-                        <button class="alert-dialog-button alert-dialog-button--primal" id="setTimeButton" onclick="app.setTime(event)">OK</button>
+                        <button class="alert-dialog-button"
+                            onclick="document.getElementById('setTimeDialog').hidden=true">Cancel</button>
+                        <button class="alert-dialog-button alert-dialog-button--primal" id="setTimeButton"
+                            onclick="app.setTime(event)">OK</button>
                     </div>
                 </div>
             </div>
@@ -66,16 +72,19 @@
                     <div class="alert-dialog-title">Set Alarm</div>
                     <div class="alert-dialog-content" style="font-size:18px; margin: 40px 40px">
                         <select class="select-input" id="dateCommand" style="margin-bottom:20px">
-                            <option value="edno">Option 1</option>
+                            <option value="0x33">Option 1</option>
                             <option value="dve">Option 2</option>
-                            <option value="tri">Option 3</option>
-                          </select>
+                            <option value="dve">Option 3</option>
+                        </select>
 
-                        <input class="text-input text-input--underbar" type="datetime-local" id="dateTimeAlarm" value="2017-06-13T13:00">
+                        <input class="text-input text-input--underbar" type="datetime-local" id="dateTimeAlarm"
+                            value="2017-06-13T13:00">
                     </div>
                     <div class="alert-dialog-footer">
-                        <button class="alert-dialog-button" onclick="document.getElementById('setAlarmDialog').hidden=true">Cancel</button>
-                        <button class="alert-dialog-button alert-dialog-button--primal" id="setTimeButton" onclick="app.setAlarm(event)">OK</button>
+                        <button class="alert-dialog-button"
+                            onclick="document.getElementById('setAlarmDialog').hidden=true">Cancel</button>
+                        <button class="alert-dialog-button alert-dialog-button--primal" id="setTimeButton"
+                            onclick="app.setAlarm(event)">OK</button>
                     </div>
                 </div>
             </div>
@@ -84,16 +93,15 @@
 
 
 
-        <div class="toolbar">
-            <div class="toolbar__center" id="pageTitle">Navigation Bar</div>
-        </div>
-
         <div id="devicesPage" class="pages">
+            <div class="toolbar">
+                <div class="toolbar__center" id="pageTitle">Scan for devices</div>
+            </div>
             <div style="text-align:center;padding-bottom: 15px">
                 <p>
                     <nobr>Auto Connect</nobr>
                 </p>
-                <ons-switch id="autoConnectButton"></ons-switch>
+                <ons-switch id="autoConnectButton" checked></ons-switch>
             </div>
             <div style="text-align: center ; margin-top: 1%;margin-bottom: 10px;">
                 <button class="button button--outline" id="refreshButton">Refresh</button>
@@ -104,7 +112,11 @@
         </div>
 
         <div id="engineControl" class="pages">
-            <div style="text-align:center ; padding-top: 40% ;" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+            <ons-toolbar>
+                <div class="center">Engine Control</div>
+            </ons-toolbar>
+            <div style="text-align:center ; padding-top: 40% ;" ontouchstart="app.writeState(event);"
+                ontouchend="app.writeState(event);">
                 <img src="./res/assets/engine_start.png" id="engineStartButton">
             </div>
 
@@ -115,12 +127,16 @@
         </div>
 
         <div id="windowControl" class="pages">
+            <div class="toolbar">
+                <div class="toolbar__center" id="pageTitle">Windows</div>
+            </div>
             <div style="text-align: center;padding-top: 40%">
                 <div ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                     <i class="fas fa-angle-double-up" style="font-size:70px" id="windowUp"></i>
                 </div>
                 <img src="./res/assets/windowControlIcon.png">
-                <div style="padding-top: 10px;" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
+                <div style="padding-top: 10px;" ontouchstart="app.writeState(event);"
+                    ontouchend="app.writeState(event);">
                     <i class="fas fa-angle-double-down" style="font-size:70px" id="windowDown"></i>
                 </div>
             </div>
@@ -135,6 +151,9 @@
             </div> -->
         </div>
         <div id="lockControl" class="pages" style="text-align:center; padding-top:50% ; font-size:120px;">
+            <div class="toolbar">
+                <div class="toolbar__center">Central locking</div>
+            </div>
             <div id="lockButtonHolder" ontouchstart="app.writeState(event);" ontouchend="app.writeState(event);">
                 <i class="fas fa-lock" id="lockButton" style=" color: red"></i>
                 <p style="font-size:16px">Lock/Unlock</p>
@@ -147,12 +166,83 @@
 
 
         <div id="openTrunkPage" class="pages">
+            <div class="toolbar">
+                <div class="toolbar__center" id="pageTitle">Trunk</div>
+            </div>
             <div style="text-align:center;padding-top: 40%">
-                <img src="./res/assets/open-trunk-icon.svg" width="250px" height="250px" id="openTrunkButton" ontouchstart="app.writeState(event)" ontouchend="app.writeState(event)">
+                <img src="./res/assets/open-trunk-icon.svg" width="250px" height="250px" id="openTrunkButton"
+                    ontouchstart="app.writeState(event)" ontouchend="app.writeState(event)">
             </div>
         </div>
 
+
+        <div id="voltageSettingsPage" class="pages">
+            <div class="toolbar">
+                <div class="toolbar__left" onclick="app.showPage('aboutPage')">
+                    <span class="toolbar-button">
+                        <i class="fas fa-arrow-left" style="font-size:32px; vertical-align:-6px;"></i>
+                    </span>
+                </div>
+                <div class="toolbar__center" id="pageTitle">Voltage Settings</div>
+            </div>
+            <ons-list>
+                <ons-list-item>
+                    <div class="center">
+                        Ignition
+                    </div>
+                    <div class="right">
+                        <nobr style="padding-right:5px;"> LOW </nobr>
+                        <ons-switch id="ignitionSetting"></ons-switch>
+                        <nobr style="padding-left:5px;">HIGH </nobr>
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        Starter motor
+                    </div>
+                    <div class="right">
+                        <nobr style="padding-right:5px;"> LOW </nobr>
+                        <ons-switch id="starterSetting"></ons-switch>
+                        <nobr style="padding-left:5px;">HIGH </nobr>
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        Windows
+                    </div>
+                    <div class="right">
+                        <nobr style="padding-right:5px;"> LOW </nobr>
+                        <ons-switch id="windowsSettings"></ons-switch>
+                        <nobr style="padding-left:5px;">HIGH </nobr>
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        Central locking
+                    </div>
+                    <div class="right">
+                        <nobr style="padding-right:5px;"> LOW </nobr>
+                        <ons-switch id="centralLockingSettings"></ons-switch>
+                        <nobr style="padding-left:5px;">HIGH </nobr>
+                    </div>
+                </ons-list-item>
+                <ons-list-item>
+                    <div class="center">
+                        Trunk opening
+                    </div>
+                    <div class="right">
+                        <nobr style="padding-right:5px;"> LOW </nobr>
+                        <ons-switch id="trunkSetting"></ons-switch>
+                        <nobr style="padding-left:5px;">HIGH </nobr>
+                    </div>
+                </ons-list-item>
+            </ons-list>
+        </div>
+
         <div id="aboutPage" class="pages">
+            <div class="toolbar">
+                <div class="toolbar__center" id="pageTitle">About</div>
+            </div>
             <ul class="list">
                 <li class="list-header">
                     Settings
@@ -160,24 +250,28 @@
                 <li class="list-item">
                     <div class="list-item__center">
                         <div class="list-item__title">
-                            Model Name:
+                            Current date and time on device:
                         </div>
-                        <div class="list-item__subtitle" id="modelName">
+                        <div class="list-item__subtitle" id="dateTimeOnDevice">
                         </div>
                     </div>
                 </li>
-                <li class="list-item list-item--tappable" onclick="app.setAutoConnectDevice()" id="setAutoConnectDeviceButton">
+                <li class="list-item list-item--tappable" onclick="app.showPage('voltageSettingsPage')">
+                    <div class="list-item__center">Voltage Settings</div>
+                </li>
+                <li class="list-item list-item--tappable" onclick="app.setAutoConnectDevice()"
+                    id="setAutoConnectDeviceButton">
                     <div class="list-item__center">Auto connect to this device</div>
                 </li>
                 <li class="list-item list-item--tappable" id="setAlarmButton">
-                    <div class="list-item__center" style="color: grey">Set alarm event</div>
+                    <div class="list-item__center">Set alarm event</div>
                 </li>
                 <li class="list-item list-item--tappable" id="setCurrentTimeButton">
-                    <div class="list-item__center" >Set time on remote device</div>
+                    <div class="list-item__center">Set time on remote device</div>
                 </li>
-                <li class="list-item list-item--tappable" id="debugPageButton" hidden="true" onclick="app.showPage('debugPage' , 'Debug Page' , 'aboutPage') ; ">
-                    <div class="list-item__center">Debug Page</div>
-                </li>
+                <!-- <li class="list-item list-item--tappable" id="debugPageButton" id="testModeButton" onclick="app.testMode()">
+                    <div class="list-item__center">Test mode</div>
+                </li> -->
             </ul>
             <ul class="list" style="margin-top: 10%; z-index: auto">
                 <li class="list-item list-item--tappable" id="disconnectButton" onclick="app.disconnect()">
@@ -186,28 +280,9 @@
             </ul>
         </div>
 
-
-
-
-        <div class="pages" id="debugPage">
-            <ul class="list">
-                <li class="list-item">
-                    <div class="list-item__center">
-                        <div class="list-item__title">
-                            Window Left:
-                        </div>
-                        <div class="list-item__subtitle" id="windowLeftValue">
-
-                        </div>
-                    </div>
-                </li>
-            </ul>
-        </div>
-
-
         <div hidden class="tabbar" id="tabbar" style="position:fixed">
             <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage('engineControl', 'Engine Control')">
+                <input type="radio" name="tabbar-c" id="EngineControllButton" onclick="app.showPage('engineControl')">
                 <button class="tabbar__button">
                     <i class="tabbar__icon fas fa-car"></i>
                     <div class="tabbar__label">Engine</div>
@@ -215,7 +290,7 @@
             </label>
 
             <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="windowControllButton" onclick="app.showPage('windowControl', 'Window Control')">
+                <input type="radio" name="tabbar-c" id="windowControllButton" onclick="app.showPage('windowControl')">
                 <button class="tabbar__button" style="text-align:center">
                     <i class="tabbar__icon fas fa-arrows-alt-v"></i>
                     <div class="tabbar__label">Windows</div>
@@ -223,7 +298,7 @@
             </label>
 
             <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="lockControlButton" onclick="app.showPage('lockControl', 'Central locking')">
+                <input type="radio" name="tabbar-c" id="lockControlButton" onclick="app.showPage('lockControl')">
                 <button class="tabbar__button">
                     <i class="tabbar__icon fas fa-user-lock"></i>
                     <div class="tabbar__label">Central locking</div>
@@ -231,14 +306,14 @@
             </label>
 
             <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="lockControlButton" onclick="app.showPage('openTrunkPage', 'Open Trunk')">
+                <input type="radio" name="tabbar-c" id="lockControlButton" onclick="app.showPage('openTrunkPage')">
                 <button class="tabbar__button">
                     <i class="tabbar__icon fas fa-luggage-cart"></i>
                     <div class="tabbar__label">Open trunk</div>
                 </button>
             </label>
             <label class="tabbar__item">
-                <input type="radio" name="tabbar-c" id="aboutPageButton" onclick="app.showPage('aboutPage', 'About')">
+                <input type="radio" name="tabbar-c" id="aboutPageButton" onclick="app.showPage('aboutPage')">
                 <button class="tabbar__button">
                     <i class="tabbar__icon fas fa-info"></i>
                     <div class="tabbar__label">About</div>

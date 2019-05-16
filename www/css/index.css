@@ -17,6 +17,9 @@ body {
 #windowDown:active{
     color: red;
 }
+/* .toolbar{
+    position: static;
+} */
 /* 
 button {
     -webkit-appearance: square-button;
