@@ -3,9 +3,23 @@ body {
     
     -webkit-appearance: none;  
     
-    -webkit-touch-callout: none; -webkit-user-select: none;
-    user-select:none;
+    /* -webkit-touch-callout: none; -webkit-user-select: none; */
+    /* user-select:none; */
 }
+
+#openTrunkButton:active{
+    filter: invert(0.5) sepia(1) saturate(100) hue-rotate(2deg);
+}
+
+#windowUp:active{
+    color: red;
+}
+#windowDown:active{
+    color: red;
+}
+/* .toolbar{
+    position: static;
+} */
 /* 
 button {
     -webkit-appearance: square-button;
